@@ -1,14 +1,14 @@
 //SPDX-License-Identifier:MIT
 
-pragma solidity 0.8.26;
-import{PermissionImp} from "../src/Permision/Permissioninfo.sol";
+pragma solidity 0.8.28;
+import{PermissionImp} from "../Permision/Permissioninfo.sol";
 import{ErrorLib} from "../DataTypes/Errors.sol";
 import{Structss} from "../DataTypes/Structs.sol";
-import{IEntry} from "../Core/Entry.sol";
+import{IEntry} from "../Interface/Core/IEntry.sol";
 import {IManager} from "../Interface/Core/Imanager.sol";
 
 contract Manager is  IManager, PermissionImp{
-    Entry entryPoint;
+    IEntry entryPoint;
 Structss.TokenInfo tokenImfo;
 bytes manager = abi.encodePacked(keccak256("manager"));
 bytes UserGov = abi.encodePacked(keccak256("UserGov"));
@@ -24,15 +24,20 @@ uint256 cap;
 uint256 minbetAmount;
 uint256 maxbetAmount;
 
+ uint256 numberogGamesWonn;
+    uint256 numberOfGamesPlayed;
+
 ///mapping
-mapping(address => tokenImfo) public tokenAddressToInfo;
+mapping(address => Structss.TokenInfo) public tokenAddressToInfo;
 mapping(address => bool) public whitelistTokens;
 
 mapping(address => bool) public isExistingOracle;
 address[] private oracles;
 
  // the user address with control
-constructor(bytes userAdmin){
+constructor(bytes memory userAdmin, address _entryPoint) {
+    require(_entryPoint != address(0), ErrorLib.Manager__EntryPoint_Cannot_Be_Zero());
+    entryPoint = IEntry(_entryPoint);
    
     adminUser = userAdmin;
    
@@ -60,7 +65,7 @@ function addOracle(address _oracleAddress) public OnlyManager{
 
 // for users on trade mode , will trigger only trade mode activities
 //only owner manager can change this
-function setManager(bytes _manager) public CanCallonProAdmin {
+function setManager(bytes memory _manager) public CanCallonProAdmin {
   require(_manager != bytes(0), ErrorLib.Manager__Can_not_be_Address());
   manager = _manager;
 }    
@@ -79,11 +84,11 @@ function setMinDeposit(uint256 _min) public OnlyManager{
     function setCaponbet(uint256 _minbetAmount, uint256 _maxbetAmount) external OnlyManager{
        minbetAmount = _minbetAmount;
        maxbetAmount = _maxbetAmount;
-        emit CapUpdated(_newCap);
+       // emit CapUpdated(_newCap);
     }
 
 ////OnlyUser Can cahange this//////
-function setUserRolesGoverner(bytes _userGov) public CancallOnUser {
+function setUserRolesGoverner(bytes memory _userGov) public CancallOnUser {
     require(_userGov != bytes(0), ErrorLib.Manager__UserGov_Connot_be_Zero());
     UserGov = _userGov;
 }
@@ -97,12 +102,20 @@ function getMinAmount() public view returns(uint256){
     return minAmount;
 }
 
+// function increaseGamesWon() public {
+//     numberogGamesWonn++;
+// }
+// function increaseGamesPlayed() public {
+//     numberOfGamesPlayed++;
+// }
 
 modifier OnlyManager() {
     require(msg.sender == manager, ErrorLib.Manager__must_Be_Manager());
+    _;
 }
 modifier OnlyEntryPoint(){
     require(msg.sender == entryPoint, ErrorLib.Manager__OnlyEntryPoint() );
+    _;
 }
 
 }

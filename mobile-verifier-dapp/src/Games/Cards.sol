@@ -1,365 +1,293 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.28;
 
-import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
-import "@flarenetwork/flare-periphery-contracts/stateConnector/StateConnector.sol";
 import {IRankNFT} from "../Interface/Games/IRankNFT.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IEntry} from "../Interface/Core/IEntry.sol";
-import{IGameContractCrossChain} from "../Interface/Games/IGameContractCrossChain.sol";
+import{ICardGameWithNFT} from "../Interface/Games/IGameContract.sol";
+import{Structss} from "../DataTypes/Structs.sol";
+import {ErrorLib} from "../DataTypes/Errors.sol";
 
-contract GameContractCrossChain is IGameContractCrossChain, VRFConsumerBaseV2, AutomationCompatibleInterface {
-    using SafeERC20 for IERC20;
-    // Game Structures
-    struct GameSession {
-        address player;
-        uint256 betAmount;
-        uint256[] playerCards;
-        uint256[] dealerCards;
-        uint256[] availableCards;
-        bool inProgress;
-        uint256 lastActionTime;
-        address _rankNFTaddr;
-    }
-
-    // Chainlink VRF
-    VRFCoordinatorV2Interface private immutable vrfCoordinator;
-    uint64 private immutable subscriptionId;
-    bytes32 private immutable gasLane;
-    uint32 private immutable callbackGasLimit;
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
-    uint32 private constant NUM_WORDS = 1;
-    mapping(uint256 => address) private vrfRequests;
-
-    // Chainlink Automation
-    uint256 private constant GAME_TIMEOUT = 1 hours;
-    
-    // Flare State Connector
-    StateConnector public immutable stateConnector;
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
 
-    // Game Configuration
-    address public _gameToken;
-    
-    // Game State
-    mapping(address => GameSession) public activeGames;
-    mapping(address => uint256) public playerBalances;
-    uint256 public houseBalance;
+contract CardGameWithNFT is ICardGameWithNFT, VRFConsumerBaseV2Plus {
+    IEntry private immutable _entry;
+    IRankNFT private immutable _rankNFT;
+    Structss.CurrentGame public currentGame;
+   
+
+    address private immutable _token;
+
+    uint256 public s_gameId;
+
+
+  mapping(uint256 =>   Structss.CurrentGame) public gameStarted;
+
+
   
-  uint256 gamesPlayedCount = 1;
-  uint256 gamesWonCount = 1;
-    IRankNFT public rankNFT;
-    IEntry public entryPoint;
+    // Chainlink
+    bytes32 private immutable i_keyHash;
+    uint256 private immutable i_subscriptionId;
+    uint32 private immutable i_callbackGasLimit;
 
-    // Events
-    event GameStarted(address indexed player, uint256 betAmount);
-    event CardDrawn(address indexed player, uint256 cardValue);
-    event GameResult(address indexed player, bool won, uint256 amount);
-    event CrossChainUpdate(address indexed player, bytes32 updateHash);
-    event BalanceUpdated(address indexed player, uint256 newBalance);
+  
 
-    constructor(
-        address _vrfCoordinator,
-        uint64 _subscriptionId,
-        bytes32 _gasLane,
-        uint32 _callbackGasLimit,
-        address _stateConnector
-        address _rankNFT,
-        address _gameToken,
-        address _entryPoint
-    ) VRFConsumerBaseV2(_vrfCoordinator) {
-        vrfCoordinator = VRFCoordinatorV2Interface(_vrfCoordinator);
-        subscriptionId = _subscriptionId;
-        gasLane = _gasLane;
-        callbackGasLimit = _callbackGasLimit;
-        stateConnector = StateConnector(_stateConnector);
-        rankNFT = IRankNFT(_rankNFT);
-        gameToken = _gameToken;
-        entryPoint = IEntry(_entryPoint);
-    }
-
-    // Start a new game with a bet
-    function startGame(uint256 betAmount) external onlyEntryPoint {
-       IERC20(_gameToken).safeTransferFrom(msg.sender, address(this), betAmount);
-        require(activeGames[msg.sender].player == address(0), "Game already in progress");
-
-       
-        GameSession storage session = activeGames[msg.sender];
-        session.player = msg.sender;
-        session.betAmount = betAmount;
-        session.inProgress = true;
-        session.lastActionTime = block.timestamp;
-        
-       
-        for (uint256 i = 1; i <= 52; i++) {
-            session.availableCards.push(i);
-        }
-
-        // Request random cards for initial deal
-        uint256 requestId = vrfCoordinator.requestRandomWords(
-            gasLane,
-            subscriptionId,
-            REQUEST_CONFIRMATIONS,
-            callbackGasLimit,
-            NUM_WORDS
-        );
-        vrfRequests[requestId] = msg.sender;
-
-        emit GameStarted(msg.sender, betAmount);
-    }
-
-    // Chainlink VRF callback
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
-        address player = vrfRequests[requestId];
-        GameSession storage session = activeGames[player];
-        
-        // Deal initial cards
-        _drawCard(player, randomWords[0]);
-        _drawCard(player, randomWords[0] >> 8); // shift right
-        
-        // Second card for dealer (face down)
-        _drawDealerCard(player, randomWords[0] >> 16);
-    }
-
-    // Player action to draw another card
-    function hit() external {
-        GameSession storage session = activeGames[msg.sender];
-        require(session.inProgress, "No active game");
-        
-        // Request random card
-        uint256 requestId = vrfCoordinator.requestRandomWords(
-            gasLane,
-            subscriptionId,
-            REQUEST_CONFIRMATIONS,
-            callbackGasLimit,
-            NUM_WORDS
-        );
-        vrfRequests[requestId] = msg.sender;
-    }
-
-    // Player action to stand
-    function stand() external {
-        GameSession storage session = activeGames[msg.sender];
-        require(session.inProgress, "No active game");
-        
-        // Dealer draws until reaching threshold
-        while (_calculateHand(session.dealerCards) < 17) {
-            uint256 randomValue = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)));
-            _drawDealerCard(msg.sender, randomValue);
-        }
-        
-        _determineWinner(msg.sender);
-    }
-
-  // Chainlink Automation: Check for games needing upkeep
-    function checkUpkeep(
-        bytes calldata /* checkData */
-    ) external view override returns (bool upkeepNeeded, bytes memory performData) {
-        // This simplified version checks all active games
-        // In production, you'd want a more efficient approach
-        
-        // Initialize empty array to store games needing upkeep
-        address[] memory gamesNeedingUpkeep = new address[](0);
-        uint256 count = 0;
-        
-        // Check all active games (note: this is inefficient for many games)
-        address[] memory activePlayers = _getActivePlayers();
-        for (uint256 i = 0; i < activePlayers.length; i++) {
-            address player = activePlayers[i];
-            GameSession storage session = activeGames[player];
-            
-            // Check if game has timed out
-            if (block.timestamp - session.lastActionTime > GAME_TIMEOUT) {
-                // Resize array (inefficient but works for demonstration)
-                address[] memory newArray = new address[](count + 1);
-                for (uint256 j = 0; j < count; j++) {
-                    newArray[j] = gamesNeedingUpkeep[j];
-                }
-                newArray[count] = player;
-                gamesNeedingUpkeep = newArray;
-                count++;
-            }
-        }
-        
-        upkeepNeeded = gamesNeedingUpkeep.length > 0;
-        performData = abi.encode(gamesNeedingUpkeep);
-    }
-
-    // Chainlink Automation: Perform upkeep on timed-out games
-    function performUpkeep(bytes calldata performData) external override {
-        address[] memory gamesToProcess = abi.decode(performData, (address[]));
-        
-        for (uint256 i = 0; i < gamesToProcess.length; i++) {
-            address player = gamesToProcess[i];
-            GameSession storage session = activeGames[player];
-            
-            // Only process if game still exists and is timed out
-            if (session.inProgress && 
-                block.timestamp - session.lastActionTime > GAME_TIMEOUT) {
-                
-                // Player loses by default for timing out
-                _endGame(player, false);
-                
-                // Emit special event for timeout
-                emit GameResult(player, false, 0, "Game timed out");
-            }
-        }
-    }
-
-    // Helper function to get all active players (not efficient for large scales)
-    function _getActivePlayers() internal view returns (address[] memory) {
-        // In production, you'd want to maintain a separate array of active players
-        // This is just for demonstration
-        address[] memory players = new address[](100); // Arbitrary size
-        uint256 count = 0;
-        
-        // This is VERY inefficient - don't use in production
-        // Just showing the concept
-        for (uint256 i = 0; i < 100; i++) {
-            address potentialPlayer = address(uint160(i + 1)); // Just a demo
-            if (activeGames[potentialPlayer].inProgress) {
-                players[count] = potentialPlayer;
-                count++;
-            }
-        }
-        
-        // Resize array
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = players[i];
-        }
-        
-        return result;
-    }
-
-    // Internal game functions
-    function _drawCard(address player, uint256 randomValue) internal {
-        GameSession storage session = activeGames[player];
-        uint256 cardIndex = randomValue % session.availableCards.length;
-        uint256 card = session.availableCards[cardIndex];
-        
-        // Remove card from deck
-        session.availableCards[cardIndex] = session.availableCards[session.availableCards.length - 1];
-        session.availableCards.pop();
-        
-        session.playerCards.push(card);
-        emit CardDrawn(player, card);
-        
-        // Check if bust
-        if (_calculateHand(session.playerCards) > 21) {
-            _endGame(player, false);
-        }
-    }
-
-    function _drawDealerCard(address player, uint256 randomValue) internal {
-        GameSession storage session = activeGames[player];
-        uint256 cardIndex = randomValue % session.availableCards.length;
-        uint256 card = session.availableCards[cardIndex];
-        
-        // Remove card from deck
-        session.availableCards[cardIndex] = session.availableCards[session.availableCards.length - 1];
-        session.availableCards.pop();
-        
-        session.dealerCards.push(card);
-    }
-
-    function _calculateHand(uint256[] memory cards) internal pure returns (uint256) {
-        uint256 total = 0;
-        uint256 aces = 0;
-        
-        for (uint256 i = 0; i < cards.length; i++) {
-            uint256 value = cards[i] % 13;
-            if (value == 0 || value >= 10) {
-                total += 10;
-                if (value == 0) aces++;
-            } else {
-                total += value;
-            }
-        }
-        
-        // Handle aces
-        while (total > 21 && aces > 0) {
-            total -= 10;
-            aces--;
-        }
-        
-        return total;
-    }
-
-    function _determineWinner(address player) internal {
-        GameSession storage session = activeGames[player];
-        uint256 playerTotal = _calculateHand(session.playerCards);
-        uint256 dealerTotal = _calculateHand(session.dealerCards);
-        
-        bool playerWon = (playerTotal <= 21) && 
-                        ((dealerTotal > 21) || (playerTotal > dealerTotal));
-        
-        _endGame(player, playerWon);
-    }
-
-    function _endGame(address player, bool playerWon) internal {
-        GameSession storage session = activeGames[player];
-         _gamesPlayedCount= gamesPlayedCount++
-        // Payout
-        if (playerWon) {
-            uint256 payout = session.betAmount * 2;
-            playerBalances[player] += payout;
-            houseBalance -= payout;
-             rankNFTaddr = CloneNFT();
-             session._rankNFTaddr = rankNFTaddr;
-            mintRankNFT(session.player, gamesWonCount++, _gamesPlayedCount);
-            IERC20(_gameToken).safeTransfer(player, payout);
-            emit GameResult(player, true, payout);
-        } else {
-            houseBalance += session.betAmount;
-
-            emit GameResult(player, false, 0);
-        }
-        
-        // Prepare cross-chain update
-        bytes32 updateHash = keccak256(
-            abi.encodePacked(
-                player,
-                playerWon ? 1 : 0,
-                session.betAmount,
-                block.timestamp
-            )
-        );
-        stateConnector.attestMessageHash(updateHash);
-        emit CrossChainUpdate(player, updateHash);
-        
-        // Clean up
-        // delete activeGames[player];
-        //dont delete, just reset
-        session.inProgress = false;
-    }
+    // Constants
+    uint256 private constant MAX_PLAYERS = 4;
+    uint256 private constant CARDS_PER_PLAYER = 2;
+    uint256 private constant BLACKJACK = 21;
+    uint32 private constant NUM_WORDS = 1;
+    uint16 private constant REQUEST_CONFIRMATIONS = 3;
     
-    // Cross-chain verification functions
-    function verifyPolkadotUpdate(
-        bytes32 updateHash,
-        bytes memory proof
-    ) public view returns (bool) {
-        return stateConnector.verifyMessageHash(updateHash, proof);
+
+
+
+
+    
+    // Events
+    //event PlayerJoined(address player);
+    event GameStarted();
+    event CardsDealt();
+    event CardDrawn(address player, uint8 card);
+    event WinnerDeclared(address winner);
+    event NFTMinted(address winner, uint256 tokenId);
+    event GameReset();
+
+      constructor(
+        address vrfCoordinator,
+        bytes32 keyHash,
+        uint256 subscriptionId,
+        uint32 callbackGasLimit,
+      address entry,
+        address token,
+        address rankNFT
+    )
+        VRFConsumerBaseV2Plus(vrfCoordinator)
+      
+    {
+        i_keyHash = keyHash;
+        i_subscriptionId = subscriptionId;
+        i_callbackGasLimit = callbackGasLimit;
+        
+       _entry = IEntry(entry);
+        _token = token;
+        _rankNFT = IRankNFT(rankNFT);
+       
     }
 
-    function mintRankNFT(address to, uint256 _gamesWonCount, uint256 _gamesPlayedCount, rankNFtadd) internal {
+
+function CreateNewGame(uint256 betAmountRequired, uint256 noOFPlayer) public  onlyEntryPoint{
+     s_gameId++;
+     uint256 gameindex = s_gameId;
+    if (noOFPlayer > MAX_PLAYERS) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+     gameStarted[gameindex].totalPlayers = noOFPlayer;
+    gameStarted[gameindex].betAmountRequired = betAmountRequired;
+    gameStarted[gameindex].gameState = Structss.GameState.WAITING;
+    gameStarted[gameindex].lastTimestamp = block.timestamp;
+    gameStarted[gameindex].totalbet += betAmountRequired;
+   // gameStarted[gameindex].playerDetails.push(Player(msg.sender, new uint8 , true));
+    gameStarted[gameindex].deck = createDeck();
+    gameStarted[gameindex].isPlayerInGame[msg.sender] = true;
+    IERC20(_token).transferFrom(msg.sender, address(this), betAmountRequired);
+    emit GameStarted();
+
+}
+
+function joinGame(uint256 gameId, uint256 _amount) public  onlyEntryPoint{
+    if (gameStarted[gameId].gameState != Structss.GameState.WAITING) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    if (gameStarted[gameId].isPlayerInGame[msg.sender]) {
+        revert ErrorLib.Entry__already_Registered();
+    }
+    if (gameStarted[gameId].players.length >= gameStarted[gameId].totalPlayers) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    gameStarted[gameId].players.push(Structss.Player(msg.sender, new uint8[](0), true));
+    gameStarted[gameId].isPlayerInGame[msg.sender] = true;
+      gameStarted[gameId].totalbet += _amount;
+    IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+   // emit PlayerJoined(msg.sender);
+}
+
+function startGame(uint256 gameId) public  onlyEntryPoint {
+    if (gameStarted[gameId].gameState != Structss.GameState.WAITING) {
+        revert ErrorLib.Game__InvalidState();
+    }
+    if (gameStarted[gameId].players.length < 2) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    gameStarted[gameId].gameState = Structss.GameState.SHUFFLING;
+    gameStarted[gameId].deck = shuffleDeck(gameStarted[gameId].deck);
+    gameStarted[gameId].gameState = Structss.GameState.DEALING;
+    dealPLayersWithCards(gameId);
+    gameStarted[gameId].lastTimestamp = block.timestamp;
+    gameStarted[gameId].gameState = Structss.GameState.PLAYING;
+    emit GameStarted();
+}
+
+function hit(uint256 gameId) public  onlyEntryPoint{
+    if (gameStarted[gameId].gameState != Structss.GameState.PLAYING) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+     Structss.CurrentGame storage player = gameStarted[gameId].players[msg.sender];
+    if (!gameStarted[gameId].isPlayerInGame[msg.sender]) {
+        revert ErrorLib.Entry__not_Registered();
+    }
+    if (player.hand.length >= CARDS_PER_PLAYER) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    uint8 card = gameStarted[gameId].deck[gameStarted[gameId].deck.length - 1];
+    player.hand.push(card);
+    gameStarted[gameId].deck.pop();
+    emit CardDrawn(msg.sender, card);
+    if (calculateHandValue(player.hand) > BLACKJACK) {
+        player.isActive = false;
+        emit WinnerDeclared(msg.sender);
+        declareWinner(gameId);
+    }
+}
+
+function poke(uint256 gameId, address target) public  onlyEntryPoint{
+    if (gameStarted[gameId].gameState != Structss.GameState.PLAYING) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+   Structss.CurrentGame storage sender = gameStarted[gameId].players[msg.sender];
+     Structss.CurrentGame storage targetPlayer = gameStarted[gameId].players[target];
+    if (!sender.isActive || !targetPlayer.isActive) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    uint8 card = gameStarted[gameId].deck[gameStarted[gameId].deck.length - 1];
+    targetPlayer.hand.push(card);
+    gameStarted[gameId].deck.pop();
+    emit CardDrawn(target, card);
+    if (calculateHandValue(targetPlayer.hand) > BLACKJACK) {
+        targetPlayer.isActive = false;
+        emit WinnerDeclared(target);
+        declareWinner(gameId);
+    }
+}
+function stand(uint256 gameId) public  onlyEntryPoint{
+    if (gameStarted[gameId].gameState != Structss.GameState.PLAYING) {
+        revert ErrorLib.Game__InvalidState();
+    }
+      Structss.CurrentGame storage player = gameStarted[gameId].players[msg.sender];
+    if (!player.isActive) {
+        revert ErrorLib.Entry__not_Registered();
+    }
+    player.isActive = false; // Player stands, no more actions
+    emit WinnerDeclared(msg.sender);
+    declareWinner(gameId);
+}
+function calculateHandValue(uint8[] memory hand) internal pure returns (uint8) {
+    uint8 value = 0;
+    uint8 aces = 0;
+    for (uint256 i = 0; i < hand.length; i++) {
+        uint8 cardValue = hand[i] % 13; // 0-12 for Ace to King
+        if (cardValue >= 10) {
+            value += 10; // Face cards are worth 10
+        } else if (cardValue == 0) {
+            value += 11; // Ace is worth 11 initially
+            aces++;
+        } else {
+            value += cardValue + 1; // Cards 2-9 are worth their face value + 1
+        }
+    }
+    // Adjust for Aces if value exceeds 21
+    while (value > BLACKJACK && aces > 0) {
+        value -= 10; // Convert Ace from 11 to 1
+        aces--;
+    }
+    return value;
+}
+function declareWinner(uint256 gameId) internal {
+    if (gameStarted[gameId].gameState != Structss.GameState.PLAYING) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    address winner;
+    uint8 bestScore = 0;
+    for (uint256 i = 0; i < gameStarted[gameId].players.length; i++) {
+         Structss.CurrentGame storage player = gameStarted[gameId].players[i];
+        if (player.isActive) {
+            uint8 score = calculateHandValue(player.hand);
+            if (score > bestScore && score <= BLACKJACK) {
+                bestScore = score;
+                winner = player.addr;
+            }
+        }
+    }
+    if (winner != address(0)) {
+        // Transfer winnings
+        uint256 winnings = gameStarted[gameId].totalbet;
+        IERC20(_token).transfer(winner, winnings);
+        emit WinnerDeclared(winner);
+        
+        // Mint NFT for the winner
+      //  uint256 tokenId = IRankNFT(_entry.getRankNFT()).mintNFT(winner);
+     (,,,address _nftAddr) = _entry.getUserInfo(winner);
+     mintRankNFT(winner, 1, 1, _nftAddr);
+       // emit NFTMinted(winner, tokenId);
+    }
+    delete gameStarted[gameId];
+    emit GameReset();
+
+}
+
+    function createDeck() internal pure returns (uint8[] memory) {
+        uint8[] memory deck = new uint8[](52);
+        for (uint8 i = 0; i < 52; i++) {
+            deck[i] = i;
+        }
+        return deck;
+    }
+
+//change tgis to utilize chainlike VRF and automation/ do deep read on how to use it great with blackjack
+    function shuffleDeck(uint8[] memory deck) internal pure returns (uint8[] memory) {
+        // use chainlin randonws
+        for (uint256 i = deck.length - 1; i > 0; i--) {
+            uint256 j = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, i))) % (i + 1);
+            (deck[i], deck[j]) = (deck[j], deck[i]);
+        }
+        return deck;
+    }
+    function dealPLayersWithCards(uint256 gameId) internal {
+    if (gameStarted[gameId].gameState != Structss.GameState.DEALING) {
+        revert ErrorLib.Game__InvalidNumberOfPlayers();
+    }
+    for (uint256 i = 0; i < gameStarted[gameId].players.length; i++) {
+         Structss.CurrentGame storage player = gameStarted[gameId].players[i];
+        for (uint256 j = 0; j < CARDS_PER_PLAYER; j++) {
+            uint8 card = gameStarted[gameId].deck[gameStarted[gameId].deck.length - 1];
+            player.hand.push(card);
+            gameStarted[gameId].deck.pop();
+            emit CardDrawn(player.addr, card);
+        }
+    }
+    gameStarted[gameId].gameState = Structss.GameState.PLAYING;
+    emit CardsDealt();
+}
+
+function getGameDetails(uint256 gameId) public view returns (Structss.CurrentGame memory) {
+    return gameStarted[gameId];
+}
+  
+   
+     function mintRankNFT(address to, uint256 _gamesWonCount, uint256 _gamesPlayedCount,address __rankNFT) internal {
      
         // Mint NFT based on game stats
-        rankNFT.mintRankNFT(to, _gamesWonCount, _gamesPlayedCount, rankNFtaddr);  
+        __rankNFT.mintRankNFT(to, _gamesWonCount, _gamesPlayedCount);  
     }
 
-    function CloneNFT()internal returns(address) {
-        // Clone the NFT contract
-        address clone = address(new IRankNFT());
-        return clone;
-    }
 
-        modifier onlyEntryPoint() {
-        require(msg.sender == entryPoint, "Only EntryPoint");
+modifier onlyEntryPoint() {
+        require(msg.sender == _entry, ErrorLib.Manager__OnlyEntryPoint());
         _;
-    }
+    } 
+
 }

@@ -1,6 +1,6 @@
 //SPDX-License-Identifier:MIT
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.28;
 import{ErrorLib} from "../DataTypes/Errors.sol";
 contract PermissionImp{
 
@@ -18,11 +18,13 @@ bytes proModeAdmin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
 modifier CancallOnUser() {
     require(msg.sender == adminUser, ErrorLib.Permssion__OnlyUserAmin() );
+    _;
 
 }
 
 modifier CanCallonProAdmin() {
     require(msg.sender ==  proModeAdmin, ErrorLib.Permssion__OnlyUserAmin() );
+    _;
     
 }
 
