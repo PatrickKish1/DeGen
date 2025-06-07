@@ -66,17 +66,15 @@ struct UserInfoMation{
     }
     
    
-    struct CurrentGame{
-       
-        uint256 totalPlayers;
-        uint256 betAmountRequired;
-        uint256 _totalBet;
-        GameState gameState;
-        address[] players;
-        Player[] playerDetails;
-         uint8[] deck;
-         uint256 lastTimestamp;
-        mapping(address => bool) isPlayerInGame;
-        uint256 requestId;
-    }
+   struct CurrentGame {
+    uint256 totalPlayers;
+    uint256 betAmountRequired;
+    uint256 lastTimestamp;
+    GameState gameState;
+    uint256 _totalBet;
+    uint256 totalbet;
+    uint8[] deck;
+    mapping(address => bool) isPlayerInGame;
+    Player[] players;
+}
 }
