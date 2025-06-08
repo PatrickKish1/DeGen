@@ -1,6 +1,6 @@
 //SPDX-License-Identifier:MIT
 
-pragma solidity 0.8.26;
+pragma solidity 0.8.28;
 
 
 library ErrorLib{
@@ -23,5 +23,15 @@ library ErrorLib{
 
     ///Entry
     error Entry__already_Registered();
+    error Entry_Already_Member();
+    error Entry_only_Creator_Can_Add_Member();
+    
+
+    ///Game
+
+    error Game__InvalidNumberOfPlayers();
+   error Game__InvalidState();
+  
+  
 
 }
