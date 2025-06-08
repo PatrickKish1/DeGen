@@ -33,7 +33,7 @@ contract Transactions {
 
     function getTransactionByReference(string memory _reference) public view returns(uint256) {
         //search for transaction by reference
-        return transactions;
+        return 0;
     }
 
     function getAllTransactions() public view returns(Structss.Transaction[] memory) {

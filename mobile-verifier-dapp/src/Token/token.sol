@@ -25,7 +25,10 @@ IEntry public entryPoint;
     }
 
       modifier onlyEntryPoint() {
-        require(msg.sender == entryPoint, "Only EntryPoint can call this function");
-        _;
+      if (msg.sender != address(entryPoint)) {
+            revert("Only Entry Point can call this function");
+            _;
         }
+}
+
 }

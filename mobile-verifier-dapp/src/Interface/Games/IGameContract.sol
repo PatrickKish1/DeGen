@@ -17,5 +17,5 @@ interface ICardGameWithNFT {
     function stand(uint256 gameId) external;
 
     // View functions
-    function getGameDetails(uint256 gameId) external view returns (Structss.CurrentGame memory);
+   
 }

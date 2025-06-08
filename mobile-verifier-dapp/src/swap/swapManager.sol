@@ -17,7 +17,7 @@ using SafeERC20 for IERC20;
  
     address public immutable override uniswapFactory;
 
-    IManager public immutable override manager;
+    IManager public immutable  manager;
     IEntry public entryPoint;
 
   
