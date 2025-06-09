@@ -76,5 +76,6 @@ struct UserInfoMation{
     uint8[] deck;
     mapping(address => bool) isPlayerInGame;
     Player[] players;
+    mapping(address => uint256) playerIndex;
 }
 }
