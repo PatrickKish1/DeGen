@@ -176,9 +176,9 @@ function stand(uint256 gameId) public{
    
     gameContract.stand(gameId);
 }
-function poke(uint256 gameId, address target) public {
+function poke(uint256 gameId) public {
    
-    gameContract.poke(gameId, target);
+    gameContract.poke(gameId);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

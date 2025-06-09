@@ -12,7 +12,7 @@ contract SwapManger is ISwapManager {
 using SafeERC20 for IERC20;
 
    
-    address public override swapRouter;
+    ISwapRouter public override swapRouter;
 
  
     address public immutable override uniswapFactory;
@@ -31,7 +31,7 @@ constructor(address _entry, address _uniswapFactory,
         require(_swapRouter != address(0), "Swap router address cannot be zero");
         require(_manager != address(0), "Manager address cannot be zero");
          uniswapFactory = _uniswapFactory;
-        swapRouter = _swapRouter;
+        swapRouter = ISwapRouter(_swapRouter);
         manager = IManager(_manager);
         entryPoint = IEntry(_entry);
 
@@ -71,26 +71,27 @@ constructor(address _entry, address _uniswapFactory,
     }
 
  
+ //@add access control
      function setSwapRouter(
         address _swapRouter
-    ) external override onlyOwner {
+    ) external override  {
         require(_swapRouter != address(0));
-        require(swapRouter != _swapRouter);
-        emit SwapRouterUpdated(swapRouter, _swapRouter);
-        swapRouter = _swapRouter;
+       
+        emit SwapRouterUpdated(address(swapRouter), _swapRouter);
+         swapRouter = ISwapRouter(_swapRouter); 
     }
 
     function beforeSwap() internal{
       // will add paused stauts 
     }
 
-       modifier onlyOwner() {
-        require(msg.sender == manager.defaultProAdmin());      
-        _;  
-        }
+    //    modifier onlyOwner() {
+    //     require(msg.sender == manager.defaultProAdmin());      
+    //     _;  
+    //     }
 
         modifier onlyEntryPoint() {
-        require(msg.sender == entryPoint);
+        require(msg.sender == address(entryPoint));
         _;
         }
 
