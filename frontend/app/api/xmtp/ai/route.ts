@@ -4,7 +4,7 @@ import { initializeXMTPClient, handleAPIError } from '@/lib/xmtp-node-helpers';
 import Groq from 'groq-sdk';
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || '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'
+  apiKey: process.env.GROQ_API_KEY
 });
 
 export async function POST(request: NextRequest) {
