@@ -21,7 +21,9 @@ youtube and vercel link
 ```
 
 **DeGen Features**
-
+- conditional voting system
+- Communities (conditional voting Community, game cmmunity, utilizing AI to annoce new game creation with needed info, to give votrs insight)
+- Swap and lending systems
 
 
 **Sponsor Tech Use**
