@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@coinbase/agentkit": "^0.8.0",
     "@hookform/resolvers": "^3.9.0",
     "@iexec/dataprotector": "^2.0.0-beta.15",
     "@next/swc-wasm-nodejs": "13.5.1",
@@ -42,6 +43,10 @@
     "@types/node": "20.6.2",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
+    "@xmtp/content-type-transaction-reference": "^2.0.2",
+    "@xmtp/content-type-wallet-send-calls": "^1.0.1",
+    "@xmtp/node-sdk": "^2.1.0",
+    "@xmtp/xmtp-js": "^13.0.4",
     "autoprefixer": "10.4.15",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -51,6 +56,8 @@
     "eslint": "8.49.0",
     "eslint-config-next": "13.5.1",
     "ethers": "^5.7.2",
+    "fs": "^0.0.1-security",
+    "groq-sdk": "^0.23.0",
     "iexec": "^8.15.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.446.0",
@@ -69,6 +76,7 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
+    "viem": "^2.31.0",
     "zod": "^3.23.8"
   }
 }
