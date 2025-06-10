@@ -16,18 +16,21 @@ DeGen makes it easy to go from Web2 to Web3 without needing multiple apps or com
 
 **With DeGen, we bring Web3 directly to you.**
 
+```
+youtube and vercel link
+```
 
-*DeGen Features*
-
-
-
-*Sponsor Tech Use*
-
+**DeGen Features**
 
 
 
-*Improvemnt to add over time**
+**Sponsor Tech Use**
 
 
 
-*Challenges faces*
+
+**Improvemnt to add over time**
+
+
+
+**Challenges faces**
