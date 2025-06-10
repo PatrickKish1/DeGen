@@ -144,7 +144,7 @@ export function MessageList({ className }: MessageListProps) {
   const [config, setConfig] = useState<ConfigForm>({
     walletKey: '',
     encryptionKey: generateEncryptionKey(),
-    groqApiKey: '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',
+    groqApiKey: `${process.env.GROQ_API_KEY}`,
     xmtpEnv: 'dev',
     networkId: 'base-sepolia'
   });
