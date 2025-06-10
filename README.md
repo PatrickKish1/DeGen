@@ -15,3 +15,19 @@ Once they’ve acquired USDT, users can:
 DeGen makes it easy to go from Web2 to Web3 without needing multiple apps or complex steps. It brings DeFi, gaming, and governance directly to users inside a secure, familiar, mobile-first environment.
 
 **With DeGen, we bring Web3 directly to you.**
+
+
+*DeGen Features*
+
+
+
+*Sponsor Tech Use*
+
+
+
+
+*Improvemnt to add over time**
+
+
+
+*Challenges faces*
