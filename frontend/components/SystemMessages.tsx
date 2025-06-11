@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Bell, 
@@ -8,6 +8,7 @@ import {
 
 
 export function SystemMessages() {
+  const [mounted, setMounted] = useState(false);
   const [systemMessages] = useState([
     {
       id: 's1',
@@ -32,6 +33,11 @@ export function SystemMessages() {
     }
   ]);
 
+  // Use useEffect to handle client-side rendering
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="space-y-4">
       {systemMessages.map((message) => (
@@ -50,7 +56,10 @@ export function SystemMessages() {
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
-                  {new Date(message.timestamp).toLocaleString()}
+                  {/* Only render formatted date on client-side to avoid hydration mismatch */}
+                  {mounted 
+                    ? new Date(message.timestamp).toLocaleString() 
+                    : message.timestamp}
                 </span>
                 {message.actionable && (
                   <div className="flex gap-2">

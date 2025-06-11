@@ -50,7 +50,7 @@ export default function HomePage() {
             <div className="bg-primary/10 p-2 rounded-full">
               <Shield className="text-primary h-6 w-6" />
             </div>
-            <h1 className="text-3xl font-bold">SecureDeFi</h1>
+            <h1 className="text-3xl font-bold">DeGen</h1>
           </div>
           <h2 className="text-xl font-medium text-muted-foreground mb-4">
             Confidential DeFi with iExec Data Protection
@@ -95,7 +95,7 @@ export default function HomePage() {
       <section className="py-12 px-4 bg-muted/30">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-2">Features</Badge>
-          <h2 className="text-2xl font-bold mb-2">Why Choose SecureDeFi?</h2>
+          <h2 className="text-2xl font-bold mb-2">Why Choose DeGen?</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             Combining the best of DeFi with confidential computing for unmatched security and privacy
           </p>
@@ -407,7 +407,7 @@ export default function HomePage() {
           <div className="bg-primary/10 p-2 rounded-full">
             <Shield className="text-primary h-5 w-5" />
           </div>
-          <h3 className="text-lg font-bold">SecureDeFi</h3>
+          <h3 className="text-lg font-bold">DeGen</h3>
         </div>
         
         <Separator className="mb-4" />
@@ -429,7 +429,7 @@ export default function HomePage() {
         </div>
         
         <p className="text-center text-sm text-muted-foreground">
-          © 2025 SecureDeFi. Powered by iExec. All rights reserved.
+          © 2025 DeGen. Powered by iExec. All rights reserved.
         </p>
       </footer>
     </div>

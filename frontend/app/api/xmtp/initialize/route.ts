@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeXMTPClient, handleAPIError } from '@/lib/xmtp-node-helpers';
-import { generateEncryptionKey } from '@/lib/xmtp-browser-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     const { client, address, inboxId } = await initializeXMTPClient({
       walletKey,
-      encryptionKey: generateEncryptionKey(),
+      encryptionKey,
       env,
       description: `client_${Date.now()}`
     });

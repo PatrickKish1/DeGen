@@ -56,7 +56,7 @@ const Hand: React.FC<{ cards: Card[]; title: string; score: number; hideFirstCar
   cards, title, score, hideFirstCard = false 
 }) => (
   <div className="flex flex-col items-center space-y-3">
-    <h3 className="text-lg font-semibold text-white">{title}</h3>
+    <h3 className="text-lg font-semibold dark:text-white text-gray-800">{title}</h3>
     <div className="flex space-x-2">
       {cards.map((card, index) => (
         <CardComponent 
@@ -66,7 +66,7 @@ const Hand: React.FC<{ cards: Card[]; title: string; score: number; hideFirstCar
         />
       ))}
     </div>
-    <div className="text-xl font-bold text-white">
+    <div className="text-xl font-bold dark:text-white text-gray-800">
       Score: {hideFirstCard ? '?' : score}
     </div>
   </div>
@@ -258,13 +258,13 @@ export default function BlackjackGame() {
   const getStatusColor = () => {
     switch (gameState.gameStatus) {
       case 'player-win':
-        return 'text-green-400';
+        return 'text-green-600 dark:text-green-400';
       case 'dealer-win':
-        return 'text-red-400';
+        return 'text-red-600 dark:text-red-400';
       case 'push':
-        return 'text-yellow-400';
+        return 'text-yellow-600 dark:text-yellow-400';
       default:
-        return 'text-white';
+        return 'dark:text-white text-gray-800';
     }
   };
 
@@ -273,8 +273,8 @@ export default function BlackjackGame() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">♠ Blackjack ♠</h1>
-          <p className="text-green-200">Get as close to 21 as possible without going over!</p>
+          <h1 className="text-4xl font-bold dark:text-white text-gray-800 mb-2">♠ Blackjack ♠</h1>
+          <p className="dark:text-green-200 text-green-500">Get as close to 21 as possible without going over!</p>
         </div>
 
         {/* Game Status */}
@@ -285,7 +285,7 @@ export default function BlackjackGame() {
         </div>
 
         {/* Game Area */}
-        <div className="bg-green-600/30 rounded-xl p-6 backdrop-blur-sm border border-green-500/30">
+        <div className="bg-green-100 dark:bg-green-600/30 rounded-xl p-6 backdrop-blur-sm border border-green-200 dark:border-green-500/30">
           {/* Dealer's Hand */}
           <div className="mb-8">
             <Hand 
@@ -334,7 +334,7 @@ export default function BlackjackGame() {
           </div>
 
           {/* Game Rules */}
-          <div className="mt-8 text-center text-green-200 text-sm space-y-1">
+          <div className="mt-8 text-center dark:text-green-200 text-green-600 text-sm space-y-1">
             <p><strong>Rules:</strong> Get as close to 21 as possible without going over.</p>
             <p>Aces count as 11 or 1. Face cards count as 10.</p>
             <p>Dealer must hit on 16 and stand on 17.</p>

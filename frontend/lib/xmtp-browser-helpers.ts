@@ -6,19 +6,10 @@ export function generateEncryptionKey(): string {
 
 
 /**
- * Get database path for XMTP client storage - Node.js version
+ * Get database path for XMTP client storage - Browser version
+ * In the browser, we don't use file paths but instead use IndexedDB
+ * so we just need to return a unique string identifier
  */
 export const getDbPath = (description: string = "xmtp"): string => {
-  const path = require('path');
-  const fs = require('fs');
-  
-  // Use a data directory in your project
-  const dataDir = path.join(process.cwd(), 'data', 'xmtp');
-  
-  // Create directory if it doesn't exist
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  
-  return path.join(dataDir, `${description}.db3`);
+  return `${description}-db`;
 };

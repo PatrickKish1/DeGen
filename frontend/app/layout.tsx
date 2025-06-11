@@ -8,7 +8,7 @@ import { ResponsiveNavigation } from '@/components/mobile-navigation';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'DeFi Mobile',
+  title: 'DeGen',
   description: 'A secure decentralized finance mobile application with data protection',
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({
           <div className="relative min-h-screen pb-16">
             {children}
             <ResponsiveNavigation
-              logo={<span className="text-2xl font-bold">DeFi Mobile</span>}
+              logo={<span className="text-2xl font-bold">DeGen</span>}
               ThemeToggle={ThemeToggle}
             />
           </div>
