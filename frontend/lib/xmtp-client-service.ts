@@ -4,6 +4,7 @@ export interface XMTPConfig {
   walletKey: string;
   encryptionKey: string;
   env: 'dev' | 'production';
+  xmtpEnv?: 'dev' | 'production';
   groqApiKey?: string;
 }
 

@@ -3,6 +3,7 @@ import { fromString, toString } from "uint8arrays";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
+import { getDbPath } from './xmtp-browser-helpers';
 
 export interface User {
   key: `0x${string}`;
@@ -98,23 +99,6 @@ export const getEncryptionKeyFromHex = (hex: string): Uint8Array => {
   }
 };
 
-/**
- * Get database path for XMTP client storage - Node.js version
- */
-export const getDbPath = (description: string = "xmtp"): string => {
-  const path = require('path');
-  const fs = require('fs');
-  
-  // Use a data directory in your project
-  const dataDir = path.join(process.cwd(), 'data', 'xmtp');
-  
-  // Create directory if it doesn't exist
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  
-  return path.join(dataDir, `${description}.db3`);
-};
 
 /**
  * Initialize XMTP Client with Node SDK
