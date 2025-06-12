@@ -32,7 +32,7 @@ contract Manager is IManager, PermissionImp {
     address[] private oracles;
 
     constructor(address userAdmin, address _entryPoint) {
-        require(_entryPoint != address(0), ErrorLib.Manager__EntryPoint_Cannot_Be_Zero());
+     //   require(_entryPoint != address(0), ErrorLib.Manager__EntryPoint_Cannot_Be_Zero());
         entryPoint = IEntry(_entryPoint);
         adminUser = userAdmin;
     }
