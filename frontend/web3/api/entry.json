@@ -1,0 +1,573 @@
+[
+	{
+		"type": "constructor",
+		"inputs": [
+			{
+				"name": "_manager",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_farm",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_token",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_swapManager",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_gameContract",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "rankNFT",
+				"type": "address",
+				"internalType": "contract IRankNFT"
+			}
+		],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "addGroupMember",
+		"inputs": [
+			{
+				"name": "groupId",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "member",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "communities",
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [
+			{
+				"name": "name",
+				"type": "string",
+				"internalType": "string"
+			},
+			{
+				"name": "owner",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "communityCount",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "createCommunity",
+		"inputs": [
+			{
+				"name": "_name",
+				"type": "string",
+				"internalType": "string"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "createGame",
+		"inputs": [
+			{
+				"name": "totalPlayers",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "betAmountRequired",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "createGroup",
+		"inputs": [
+			{
+				"name": "_name",
+				"type": "string",
+				"internalType": "string"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "enterAaveMarket",
+		"inputs": [
+			{
+				"name": "amountIn",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "minAmountOut",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "exitAaveMarket",
+		"inputs": [
+			{
+				"name": "amountIn",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "to",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "minAmountOut",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "farm",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "contract IFarm"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "gameContract",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "contract ICardGameWithNFT"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getBalanceOf",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "tokenAddress",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getManagerAddress",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getNFTContractAddress",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getUserInfo",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "groupCount",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "groups",
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [
+			{
+				"name": "name",
+				"type": "string",
+				"internalType": "string"
+			},
+			{
+				"name": "creator",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "hit",
+		"inputs": [
+			{
+				"name": "gameId",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "initialize",
+		"inputs": [
+			{
+				"name": "_manager",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_farm",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_token",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_swapManager",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "_gameContract",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "rankNFT",
+				"type": "address",
+				"internalType": "contract IRankNFT"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "joinCommunity",
+		"inputs": [
+			{
+				"name": "communityId",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "manager",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "contract IManager"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "poke",
+		"inputs": [
+			{
+				"name": "gameId",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "registerUser",
+		"inputs": [],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "stand",
+		"inputs": [
+			{
+				"name": "gameId",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "startGame",
+		"inputs": [
+			{
+				"name": "gamesId",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "_betamount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "swapManager",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "contract ISwapManager"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "swapTokens",
+		"inputs": [
+			{
+				"name": "tokenIn",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "tokenOut",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "amountIn",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "minAmountOut",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "tier",
+				"type": "uint24",
+				"internalType": "uint24"
+			},
+			{
+				"name": "deadline",
+				"type": "uint40",
+				"internalType": "uint40"
+			},
+			{
+				"name": "receiverAddr",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "token",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "contract Token"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "error",
+		"name": "Entry_Already_Member",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "Entry__already_Registered",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "Entry__bet_Amount_Cannot_Be_Zero",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "Entry__not_Registered",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "Entry_betAmountTooBig",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "Entry_only_Creator_Can_Add_Member",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "FailedDeployment",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "InsufficientBalance",
+		"inputs": [
+			{
+				"name": "balance",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "needed",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		]
+	}
+]

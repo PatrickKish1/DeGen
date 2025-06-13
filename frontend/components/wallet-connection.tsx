@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from "@coinbase/onchainkit/wallet"
 import { Avatar, Address } from "@coinbase/onchainkit/identity"
 import { useAccount } from "wagmi"
@@ -10,6 +10,7 @@ import { useCustomTheme } from "@/lib/theme-context"
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
+import entry from "@/web3/web3"
 
 export interface WalletConnectionProps {
   className?: string;
@@ -20,6 +21,25 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
   const { address, isConnected } = useAccount()
   const {  } = useCustomTheme()
   const [, setCopied] = useState(false)
+
+  const account = useAccount()
+  console.log(account.address)
+  useEffect(() => {
+    const registerUser = async () => {
+      // const accounts = await web3.eth.getAccounts();
+      const result = await entry.methods.registerUser().send({ from: account.address });
+      console.log(result);
+    }
+    registerUser();
+  }, [account]);
+
+  useEffect(() => {
+    const getUserInfo = async () => {
+      const result = await entry.methods.getUserInfo(account.address).send({ from: account.address });
+      console.log(result);
+    }
+    getUserInfo();
+  }, [account]);
 
   // Format address for display
   const formatAddress = (addr: string | undefined) => {
