@@ -6,12 +6,13 @@ import { ResponsiveNavigation } from '@/components/mobile-navigation';
 import '@coinbase/onchainkit/styles.css';
 import './globals.css';
 import "@/lib/styles/onchainkit-styles.css"
-import '@fontsource/outfit/400.css';
-import '@fontsource/outfit/500.css';
-import '@fontsource/outfit/600.css';
-import '@fontsource/outfit/700.css';
+import { cn } from '@/lib/utils';
 
-const outfit = Outfit({ subsets: ['latin'] });
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'DeGen',
@@ -25,16 +26,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={outfit.className}>
+      <body 
+        className={cn(
+          outfit.className,
+          'antialiased overflow-x-clip',
+          'min-h-screen flex flex-col'
+        )}
+        suppressHydrationWarning
+      >
         <Providers>
-          <div className="relative min-h-screen overflow-x-clip pb-0">
-            <ResponsiveNavigation
+          <ResponsiveNavigation
               logo={<span className="text-2xl font-bold">DeGen</span>}
-              ThemeToggle={ThemeToggle}
-              liquidGlass={true}
-            />
+            ThemeToggle={ThemeToggle}
+            liquidGlass={true}
+          />
+          <main className="flex-1 relative z-10 pb-0">
             {children}
-          </div>
+          </main>
         </Providers>
       </body>
     </html>
