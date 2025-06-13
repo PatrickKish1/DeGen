@@ -1,165 +1,175 @@
 import { NextRequest, NextResponse } from 'next/server';
+import groqChatService from '@/lib/helpers/GroqService';
+import type { ChatRequest, ChatResponse } from '@/types/chat';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { message, senderAddress } = body;
+    const body: ChatRequest = await request.json();
+    const { 
+      message, 
+      senderAddress, 
+      threadId,
+      conversationHistory = []
+    } = body;
 
-    if (!message) {
+    // Validate required fields
+    if (!message || typeof message !== 'string') {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: 'Message is required and must be a string' },
         { status: 400 }
       );
     }
 
-    // Get Groq API key from environment
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey) {
+    // Check if service is configured
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { error: 'AI service not configured' },
+        { error: 'AI service not configured - missing GROQ_API_KEY' },
         { status: 500 }
       );
     }
 
-    // Detect message type for better AI responses
-    const messageType = detectMessageType(message);
-    const aiConfig = getAIResponseConfig(messageType);
+    // Process the message through our chat service
+    const result = await groqChatService.chatWithAssistant(
+      message.trim(),
+      senderAddress,
+      threadId
+    );
 
-    // Create enhanced prompt with context
-    const systemPrompt = `You are a helpful DeFi and blockchain assistant integrated with XMTP messaging on the Base network. You can help users with:
+    // Extract response content properly
+    const responseContent = typeof result.response === 'string' 
+      ? result.response 
+      : result.response.content || 'No response available';
 
-**🔧 Available Commands:**
-- /balance - Check USDC balance on Base
-- /tx <amount> - Initiate USDC transfer (e.g., /tx 0.1)
-- /status - Check system status and network health
-- /help - Show available commands
+    // Format the response
+    const response: ChatResponse = {
+      response: responseContent,
+      threadId: result.threadId,
+      timestamp: result.timestamp,
+      messageType: result.messageType || 'general',
+      analysisType: result.analysisType || 'general',
+      isDirect: result.isDirect || false,
+      contextUsed: result.contextUsed || null,
+      error: result.error || false
+    };
 
-**💡 Assistance Areas:**
-- DeFi protocols and strategies
-- Base network transactions
-- Blockchain concepts
-- Wallet operations
-- Market insights
+    return NextResponse.json(response);
 
-**Current Context:**
-- User Address: ${senderAddress || 'Not connected'}
-- Network: Base (Ethereum L2)
-- Supported Token: USDC
-- Communication: XMTP protocol
+  } catch (error) {
+    console.error('AI API route error:', error);
 
-**Response Guidelines:**
-- Keep responses concise and mobile-friendly
-- Use emojis sparingly for clarity
-- Be friendly and professional
-- Always prioritize user safety
-- Explain risks in DeFi operations
-
-Remember: Responses appear in a chat interface, so be conversational and helpful.`;
-
-    // Call Groq API
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: aiConfig.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        temperature: aiConfig.temperature,
-        max_tokens: aiConfig.max_tokens,
-        top_p: aiConfig.top_p,
-        stream: aiConfig.stream,
-      }),
-    });
-
-    if (!groqResponse.ok) {
-      const errorData = await groqResponse.json().catch(() => ({}));
-      console.error('Groq API error:', errorData);
+    // Try to get a basic error message from the service
+    try {
+      const fallbackResult = await groqChatService.chatWithAssistant(
+        "I need help - there was an error processing my request",
+        undefined,
+        undefined
+      );
+      
+      const fallbackContent = typeof fallbackResult.response === 'string'
+        ? fallbackResult.response
+        : fallbackResult.response.content || 'Error processing request';
       
       return NextResponse.json({
-        response: "I'm currently experiencing some technical difficulties. Please try again in a moment, or use the quick commands for basic operations."
+        response: "I encountered an error processing your request. Here are the available commands: /help, /status, /balance. Please try again or use one of these commands.",
+        error: true,
+        fallback: true,
+        timestamp: new Date().toISOString(),
+        threadId: fallbackResult.threadId,
+        messageType: 'general' as const,
+        analysisType: 'general' as const,
+        originalError: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
+    } catch (fallbackError) {
+      console.error('Fallback also failed:', fallbackError);
+      
+      return NextResponse.json({
+        response: "I'm currently experiencing technical difficulties. Please try again in a moment. Available commands: /help, /status, /balance",
+        error: true,
+        timestamp: new Date().toISOString(),
+        threadId: null,
+        messageType: 'general' as const,
+        analysisType: 'general' as const,
+        originalError: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      }, { status: 500 });
+    }
+  }
+}
+
+// Health check endpoint
+export async function GET() {
+  try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({
+        status: 'unhealthy',
+        error: 'GROQ_API_KEY not configured',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
     }
 
-    const groqData = await groqResponse.json();
-    const aiResponse = groqData.choices?.[0]?.message?.content || 
-      "I apologize, but I couldn't process your request at the moment. Please try again.";
-
+    const healthCheck = await groqChatService.healthCheck();
+    
     return NextResponse.json({
-      response: aiResponse,
-      messageType,
-      senderAddress,
-      timestamp: new Date().toISOString()
+      ...healthCheck,
+      endpoint: 'DeFi AI Assistant API',
+      version: '1.0.0'
     });
 
   } catch (error) {
-    console.error('AI API error:', error);
+    console.error('Health check error:', error);
     
     return NextResponse.json({
-      response: "I encountered an error processing your request. Please try again or use the quick commands for basic operations.",
-      error: process.env.NODE_ENV === 'development' ? `` : undefined
-    });
+      status: 'unhealthy',
+      error: (error as Error).message,
+      endpoint: 'DeFi AI Assistant API',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
 
-// Helper functions
-function detectMessageType(content: string): 'command' | 'question' | 'casual' {
-  const lowerContent = content.toLowerCase().trim();
-  
-  if (lowerContent.startsWith('/')) {
-    return 'command';
-  }
-  
-  const questionWords = ['how', 'what', 'when', 'where', 'why', 'which', 'who', 'can you', 'could you', 'explain', 'tell me'];
-  const hasQuestionWord = questionWords.some(word => lowerContent.includes(word));
-  const hasQuestionMark = content.includes('?');
-  
-  if (hasQuestionWord || hasQuestionMark) {
-    return 'question';
-  }
-  
-  return 'casual';
-}
+// Conversation management endpoints
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { action, threadId } = body;
 
-function getAIResponseConfig(messageType: 'command' | 'question' | 'casual') {
-  const baseConfig = {
-    model: "llama3-8b-8192",
-    temperature: 0.7,
-    max_tokens: 500,
-    top_p: 1,
-    stream: false,
-  };
+    if (!threadId) {
+      return NextResponse.json(
+        { error: 'Thread ID is required' },
+        { status: 400 }
+      );
+    }
 
-  switch (messageType) {
-    case 'command':
-      return {
-        ...baseConfig,
-        temperature: 0.3,
-        max_tokens: 300,
-      };
-    case 'question':
-      return {
-        ...baseConfig,
-        temperature: 0.7,
-        max_tokens: 500,
-      };
-    case 'casual':
-      return {
-        ...baseConfig,
-        temperature: 0.8,
-        max_tokens: 200,
-      };
-    default:
-      return baseConfig;
+    switch (action) {
+      case 'getHistory':
+        const history = await groqChatService.getConversationHistory(threadId);
+        return NextResponse.json({
+          threadId,
+          history,
+          timestamp: new Date().toISOString()
+        });
+
+      case 'clearHistory':
+        const result = await groqChatService.clearConversationHistory(threadId);
+        return NextResponse.json({
+          threadId,
+          ...result,
+          timestamp: new Date().toISOString()
+        });
+
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action. Supported actions: getHistory, clearHistory' },
+          { status: 400 }
+        );
+    }
+
+  } catch (error) {
+    console.error('Conversation management error:', error);
+    
+    return NextResponse.json({
+      error: 'Failed to manage conversation',
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }

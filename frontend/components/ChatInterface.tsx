@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAccount } from 'wagmi';
@@ -11,223 +11,84 @@ import {
   Send,
   Bot,
   AlertCircle,
+  Plus,
+  Trash2,
+  MoreVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuickCommands } from './QuickCommands';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useChat } from '@/hooks/useChat';
 
 interface ChatInterfaceProps {
   mode: 'ai' | 'p2p';
   isInitialized: boolean;
   agentAddress?: string;
   agentInboxId?: string;
-  conversations?: any[];
-  onCreateConversation?: (address: string) => Promise<any>;
-  onSendMessage?: (conversationId: string, content: string) => Promise<any>;
-  onGetMessages?: (conversationId: string) => Promise<any[]>;
-  onStartListening?: (handler: (message: any) => void) => void;
 }
 
 export function ChatInterface({ 
   mode, 
   isInitialized, 
   agentAddress,
-  agentInboxId,
-  conversations = [],
-  onCreateConversation,
-  onSendMessage,
-  onGetMessages,
-  onStartListening
+  agentInboxId
 }: ChatInterfaceProps) {
   const { address: connectedAddress, isConnected } = useAccount();
-  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeConversation, setActiveConversation] = useState<any>(null);
-  const [showChat, setShowChat] = useState(false);
-  const [inputAddress, setInputAddress] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [showThreads, setShowThreads] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-show AI chat when in AI mode
+  // Use our chat hook for AI mode
+  const {
+    messages,
+    threads,
+    activeThreadId,
+    isLoading,
+    error,
+    sendMessage,
+    createNewThread,
+    switchThread,
+    deleteThread,
+    clearCurrentThread
+  } = useChat({
+    userAddress: connectedAddress,
+    autoSave: true
+  });
+
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (mode === 'ai') {
-      setShowChat(true);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Auto-create thread for AI mode if none exists
+  useEffect(() => {
+    if (mode === 'ai' && isConnected && !activeThreadId && threads.length === 0) {
+      createNewThread('New Chat');
     }
-  }, [mode]);
+  }, [mode, isConnected, activeThreadId, threads.length, createNewThread]);
 
   const handleQuickCommand = async (command: string) => {
     setNewMessage(command);
-    
-    // For AI mode, auto-execute commands
-    if (mode === 'ai') {
-      await handleSendMessage(command);
-    }
+    await handleSendMessage(command);
   };
 
   const handleSendMessage = async (messageContent?: string) => {
     const content = messageContent || newMessage;
     if (!content.trim()) return;
     
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      if (mode === 'ai') {
-        await handleAIMessage(content);
-      } else if (activeConversation && onSendMessage) {
-        await onSendMessage(activeConversation.id, content);
-        // Refresh messages after sending
-        if (onGetMessages) {
-          const updatedMessages = await onGetMessages(activeConversation.id);
-          setMessages(updatedMessages);
-        }
-      }
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setError(error instanceof Error ? error.message : 'Failed to send message');
-    } finally {
-      setIsLoading(false);
-    }
+    await sendMessage(content);
+    setNewMessage('');
   };
 
-  const handleAIMessage = async (content: string) => {
-    // Add user message immediately
-    const userMessage = {
-      id: Date.now().toString(),
-      content,
-      sender: connectedAddress || 'You',
-      timestamp: new Date(),
-      isAIMessage: false
-    };
-    setMessages(prev => [...prev, userMessage]);
-
-    try {
-      // Process different command types
-      if (content.startsWith('/balance')) {
-        const response = await fetch('/api/xmtp/balance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: connectedAddress })
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch balance');
-        }
-        
-        const data = await response.json();
-        
-        const aiMessage = {
-          id: (Date.now() + 1).toString(),
-          content: `💰 Your USDC balance: ${data.balance || '0'} USDC`,
-          sender: 'AI Assistant',
-          timestamp: new Date(),
-          isAIMessage: true
-        };
-        setMessages(prev => [...prev, aiMessage]);
-        
-      } else if (content.startsWith('/tx ')) {
-        const amountMatch = content.match(/\/tx\s+(\d+(?:\.\d+)?)/);
-        if (amountMatch) {
-          const amount = parseFloat(amountMatch[1]);
-          if (!isNaN(amount) && amount > 0) {
-            const txMessage = {
-              id: (Date.now() + 1).toString(),
-              content: `🔄 Transaction Preview: ${amount} USDC\n\nClick to confirm or modify the transaction.`,
-              sender: 'AI Assistant',
-              timestamp: new Date(),
-              isAIMessage: true,
-              isTxPreview: true,
-              txData: { amount, recipient: agentAddress }
-            };
-            setMessages(prev => [...prev, txMessage]);
-          } else {
-            throw new Error('Invalid amount specified');
-          }
-        } else {
-          throw new Error('Please specify an amount (e.g., /tx 0.1)');
-        }
-        
-      } else if (content.startsWith('/help')) {
-        const helpMessage = {
-          id: (Date.now() + 1).toString(),
-          content: `🤖 **Available Commands:**\n\n💰 \`/balance\` - Check your USDC balance\n💸 \`/tx <amount>\` - Send USDC (e.g., /tx 0.1)\n📊 \`/status\` - Check system status\n❓ \`/help\` - Show this help\n\nYou can also ask me anything about DeFi, blockchain, or trading!`,
-          sender: 'AI Assistant',
-          timestamp: new Date(),
-          isAIMessage: true
-        };
-        setMessages(prev => [...prev, helpMessage]);
-        
-      } else if (content.startsWith('/status')) {
-        const statusMessage = {
-          id: (Date.now() + 1).toString(),
-          content: `✅ **System Status:**\n\n🌐 Network: Base ${agentAddress ? 'Connected' : 'Disconnected'}\n💬 XMTP: ${isInitialized ? 'Active' : 'Inactive'}\n🔗 Wallet: ${isConnected ? 'Connected' : 'Disconnected'}\n🤖 AI: Active`,
-          sender: 'AI Assistant',
-          timestamp: new Date(),
-          isAIMessage: true
-        };
-        setMessages(prev => [...prev, statusMessage]);
-        
-      } else {
-        // Regular AI chat processing
-        const response = await fetch('/api/xmtp/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message: content, 
-            senderAddress: connectedAddress || agentAddress 
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('AI service unavailable');
-        }
-        
-        const data = await response.json();
-        
-        const aiMessage = {
-          id: (Date.now() + 1).toString(),
-          content: data.response || 'I apologize, but I couldn\'t process your request at the moment.',
-          sender: 'AI Assistant',
-          timestamp: new Date(),
-          isAIMessage: true
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      }
-    } catch (error) {
-      console.error('Error processing AI message:', error);
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        content: `❌ Error: ${error instanceof Error ? error.message : 'Something went wrong'}`,
-        sender: 'AI Assistant',
-        timestamp: new Date(),
-        isAIMessage: true
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
-  };
-
-  const handleCreateConversation = async () => {
-    if (!inputAddress || !inputAddress.startsWith('0x') || !onCreateConversation) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const conversation = await onCreateConversation(inputAddress);
-      setActiveConversation(conversation);
-      setShowChat(true);
-      setInputAddress('');
-      
-      // Load existing messages if available
-      if (onGetMessages) {
-        const existingMessages = await onGetMessages(conversation.id);
-        setMessages(existingMessages);
-      }
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create conversation');
-    } finally {
-      setIsLoading(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -239,221 +100,232 @@ export function ChatInterface({
         <div>
           <h3 className="font-medium mb-2">Wallet Connection Required</h3>
           <p className="text-muted-foreground text-sm">
-            Connect your wallet to start {mode === 'ai' ? 'chatting with AI' : 'P2P messaging'}
+            Connect your wallet to start chatting with the AI assistant
           </p>
         </div>
       </div>
     );
   }
 
-  // Show XMTP initialization status for P2P
-  if (mode === 'p2p' && !isInitialized) {
+  // For AI mode only
+  if (mode !== 'ai') {
     return (
       <div className="text-center py-8 space-y-4">
         <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto" />
         <div>
-          <h3 className="font-medium mb-2">XMTP Initialization Required</h3>
+          <h3 className="font-medium mb-2">AI Chat Mode</h3>
           <p className="text-muted-foreground text-sm">
-            XMTP needs to be initialized to enable P2P messaging
+            This interface is designed for AI chat only
           </p>
         </div>
       </div>
     );
   }
 
-  // P2P conversation list view
-  if (mode === 'p2p' && !showChat) {
+  // Thread list view
+  if (showThreads) {
     return (
       <div className="space-y-4">
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-            {error}
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">Chat History</h3>
+          <div className="flex gap-2">
+            <Button onClick={() => createNewThread()} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              New Chat
+            </Button>
+            <Button onClick={() => setShowThreads(false)} variant="outline" size="sm">
+              Back to Chat
+            </Button>
           </div>
-        )}
-        
-        <div className="space-y-2">
-          <Input
-            type="text"
-            placeholder="Enter wallet address to chat (0x...)"
-            value={inputAddress}
-            onChange={(e) => setInputAddress(e.target.value)}
-          />
-          <Button 
-            onClick={handleCreateConversation}
-            className="w-full"
-            disabled={!inputAddress || !inputAddress.startsWith('0x') || isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creating Conversation...
-              </>
-            ) : (
-              <>
-                <User className="h-4 w-4 mr-2" />
-                Start Conversation
-              </>
-            )}
-          </Button>
         </div>
-        
-        {conversations.length > 0 && (
-          <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-2">Recent Conversations</h3>
-            <div className="space-y-2">
-              {conversations.map((conv) => (
-                <div 
-                  key={conv.id}
-                  className="flex items-center justify-between p-2 bg-muted rounded cursor-pointer hover:bg-muted/80"
-                  onClick={async () => {
-                    setActiveConversation(conv);
-                    setShowChat(true);
-                    // Load messages
-                    if (onGetMessages) {
-                      try {
-                        const msgs = await onGetMessages(conv.id);
-                        setMessages(msgs);
-                      } catch (error) {
-                        console.error('Error loading messages:', error);
-                      }
-                    }
-                  }}
-                >
-                  <div>
-                    <div className="text-sm font-medium">
-                      {conv.peerInboxId?.slice(0, 8)}...{conv.peerInboxId?.slice(-4)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(conv.createdAt).toLocaleDateString()}
-                    </div>
+
+        {threads.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+            <p>No chat history yet</p>
+            <Button onClick={() => createNewThread()} className="mt-2" size="sm">
+              Start Your First Chat
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {threads.map((thread) => (
+              <div
+                key={thread.id}
+                className={cn(
+                  "flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-muted/50",
+                  thread.id === activeThreadId && "border-primary bg-primary/5"
+                )}
+                onClick={() => {
+                  switchThread(thread.id);
+                  setShowThreads(false);
+                }}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">
+                    {thread.title}
                   </div>
-                  <MessageSquare className="h-4 w-4" />
+                  <div className="text-xs text-muted-foreground">
+                    {thread.messageCount} messages • {thread.updatedAt.toLocaleDateString()}
+                  </div>
                 </div>
-              ))}
-            </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteThread(thread.id);
+                      }}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
           </div>
         )}
       </div>
     );
   }
 
-  // Chat interface (both AI and P2P when conversation is active)
-  if ((mode === 'ai') || (mode === 'p2p' && showChat)) {
-    return (
-      <div className="space-y-4">
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-        
-        {/* Chat Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {mode === 'ai' ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
-            <h3 className="font-medium">
-              {mode === 'ai' 
-                ? "AI Assistant"
-                : `Chat with ${activeConversation?.peerInboxId?.slice(0, 8)}...${activeConversation?.peerInboxId?.slice(-4)}`
-              }
-            </h3>
-          </div>
-          {mode === 'p2p' && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                setShowChat(false);
-                setMessages([]);
-                setActiveConversation(null);
-              }}
-            >
-              Back
-            </Button>
+  // Main chat interface
+  return (
+    <div className="space-y-4 flex flex-col h-full">
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+      
+      {/* Chat Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5" />
+          <h3 className="font-medium">AI Assistant</h3>
+          {activeThreadId && (
+            <span className="text-xs text-muted-foreground">
+              ({threads.find(t => t.id === activeThreadId)?.title})
+            </span>
           )}
         </div>
-        
-        {/* Quick Commands (AI only) */}
-        {mode === 'ai' && (
-          <QuickCommands 
-            onCommandSelect={handleQuickCommand}
-            disabled={isLoading}
-          />
-        )}
-        
-        {/* Messages Area */}
-        <div className="h-64 overflow-y-auto space-y-2 border rounded-lg p-4 bg-background">
-          {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center text-muted-foreground text-center">
-              <div>
-                {mode === 'ai' 
-                  ? "👋 Ask me anything or use quick commands above!"
-                  : "💬 Start your conversation"
-                }
-              </div>
-            </div>
-          )}
-          
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex",
-                msg.sender === connectedAddress || (!activeConversation && !msg.isAIMessage)
-                  ? "justify-end" 
-                  : "justify-start"
+        <div className="flex gap-2">
+          <Button onClick={() => setShowThreads(true)} variant="outline" size="sm">
+            <MessageSquare className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => createNewThread()}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Chat
+              </DropdownMenuItem>
+              {activeThreadId && (
+                <DropdownMenuItem 
+                  onClick={clearCurrentThread}
+                  className="text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Chat
+                </DropdownMenuItem>
               )}
-            >
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      {/* Quick Commands */}
+      <QuickCommands 
+        onCommandSelect={handleQuickCommand}
+        disabled={isLoading}
+      />
+      
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto space-y-2 border rounded-lg p-4 bg-background min-h-64 max-h-96">
+        {messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-center">
+            <div>
+              <Bot className="h-8 w-8 mx-auto mb-2" />
+              <p>👋 Ask me anything or use quick commands above!</p>
+              <p className="text-xs mt-1">I can help with DeFi, blockchain, and trading questions.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {messages.map((msg) => (
               <div
+                key={msg.id}
                 className={cn(
-                  "max-w-xs p-3 rounded-lg",
-                  msg.sender === connectedAddress || (!activeConversation && !msg.isAIMessage)
-                    ? "bg-primary text-primary-foreground"
-                    : msg.isAIMessage
-                      ? "bg-secondary text-secondary-foreground"
-                      : "bg-muted text-muted-foreground"
+                  "flex",
+                  msg.role === 'user' ? "justify-end" : "justify-start"
                 )}
               >
-                <div className="text-xs font-medium mb-1">
-                  {msg.sender === connectedAddress || (!activeConversation && !msg.isAIMessage)
-                    ? "You"
-                    : msg.isAIMessage
-                      ? "🤖 AI Assistant"
-                      : `${msg.sender?.slice(0, 6)}...${msg.sender?.slice(-4)}`}
-                </div>
-                <div className="whitespace-pre-wrap">{msg.content}</div>
-                <div className="text-xs mt-1 opacity-70">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                <div
+                  className={cn(
+                    "max-w-xs p-3 rounded-lg",
+                    msg.role === 'user'
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  )}
+                >
+                  <div className="text-xs font-medium mb-1 flex items-center gap-1">
+                    {msg.role === 'user' ? (
+                      <>
+                        <User className="h-3 w-3" />
+                        You
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-3 w-3" />
+                        AI Assistant
+                      </>
+                    )}
+                  </div>
+                  <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
+                  <div className="text-xs mt-1 opacity-70">
+                    {msg.timestamp.toLocaleTimeString()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            placeholder={mode === 'ai' ? "Ask AI or type a command..." : "Type a message..."}
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={() => handleSendMessage()} 
-            disabled={isLoading || !newMessage.trim()}
-            size="sm"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
-    );
-  }
-
-  return null;
+      
+      {/* Input Area */}
+      <div className="flex gap-2">
+        <Input
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask AI or type a command..."
+          disabled={isLoading}
+          className="flex-1"
+        />
+        <Button 
+          onClick={() => handleSendMessage()} 
+          disabled={isLoading || !newMessage.trim()}
+          size="sm"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 }
