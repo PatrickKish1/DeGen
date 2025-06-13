@@ -97,7 +97,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
             <div className="flex items-center gap-2 text-white">
               <div className="h-6 w-6 overflow-hidden rounded-full">
                 {/* <Identity address={address} schemaId={address} className="items-center"> */}
-                <Avatar address={address} className="h-full w-full bg-white dark:bg-blue-800" />
+                <Avatar address={address} className="h-full w-full bg-blue-800" />
                 {/* </Identity> */}
               </div>
               <span className="hidden sm:inline">{formatAddress(address)}</span>
@@ -112,7 +112,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-10 w-10 overflow-hidden rounded-full">
-                  <Avatar address={address} className="h-full w-full" />
+                  <Avatar address={address} className="h-full w-full bg-blue-800" />
                 </div>
                 <div>
                   <Address address={address} className="text-sm font-medium" />

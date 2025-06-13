@@ -40,7 +40,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen mt-16">
+    <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative py-12 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/5 -z-10"></div>
@@ -180,10 +180,13 @@ export default function HomePage() {
         
         <div className="flex flex-col md:flex-row gap-6 items-center mb-8 max-w-6xl mx-auto">
           <div className="flex-1">
-            <div className="relative h-80 w-full rounded-xl overflow-hidden shadow-lg border bg-muted">
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                iExec Integration Image
-              </div>
+            <div className="relative h-80 w-full rounded-xl overflow-hidden shadow-lg border">
+              <Image 
+                src="/iexec-confidential-computing.png" 
+                alt="iExec Confidential Computing" 
+                fill 
+                className="object-cover"
+              />
             </div>
           </div>
           <div className="flex-1 space-y-4">
