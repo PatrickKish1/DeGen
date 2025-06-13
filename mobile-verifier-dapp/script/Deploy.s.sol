@@ -45,7 +45,7 @@ contract DeployToBase is Script {
         vm.startBroadcast();
 
         // Deploy manager first (temporary dummy address for entry)
-        manager = new Manager(userAdmin, address(0));
+        manager = new Manager(userAdmin, address(entry));
 
         // Deploy token
         token = new Token(address(entry));
@@ -61,7 +61,8 @@ contract DeployToBase is Script {
         );
 
         // Update manager with actual entry
-        manager = new Manager(userAdmin, address(entryPoint));
+        manager = new Manager(userAdmin, address(entry));
+         token = new Token(address(entry));
 
         // Set up interfaces for linking
         entryPoint = IEntry(address(entry));
@@ -79,12 +80,13 @@ contract DeployToBase is Script {
         transactions = new Transactions();
 
         // Deploy rankNFT
-        rankNFT = new RankNFT(address(entryPoint), address(gameContract));
+      
         rankNFTInterface = IRankNFT(address(rankNFT));
 
         // Deploy game contract
         gameContract = new CardGameWithNFT(address(entryPoint), gameToken, address(rankNFTInterface));
         _nftCardGameInterface = ICardGameWithNFT(address(gameContract));
+          rankNFT = new RankNFT(address(entryPoint), address(gameContract));
 
         // Deploy SwapManager
         swapManager = new SwapManger(
@@ -93,7 +95,15 @@ contract DeployToBase is Script {
             swapRouter,
             address(managerInterface)
         );
-
+ // initialize the entry 
+  entry.initialize(
+            address(manager),
+            address(farm),
+            address(token),
+            address(swapManager),
+            address(gameContract),
+            IRankNFT(rankNFT)
+  );
 
    console.log("======== Deployment Results ========");
         console.log("Manager:", address(manager));

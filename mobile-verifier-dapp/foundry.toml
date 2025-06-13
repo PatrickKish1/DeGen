@@ -10,4 +10,9 @@ out = "out"
 libs = ["lib"]
 
 
+[rpc_endpoints]
+localchain = "${LOCALCHAIN_URL}"
+basechain = "${BASE_URL}"
+
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
