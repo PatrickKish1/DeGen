@@ -5,12 +5,12 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from "@coinbase/onchainkit/wallet"
 import { Avatar, Address } from "@coinbase/onchainkit/identity"
-import { useAccount } from "wagmi"
+import { useAccount, useReadContract, useWriteContract } from "wagmi"
 import { useCustomTheme } from "@/lib/theme-context"
 import { Button } from "@/components/ui/button"
 import { Copy, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
-import entry from "@/web3/web3"
+import entry, { contractAddress, entryABI } from "@/web3/web3"
 
 export interface WalletConnectionProps {
   className?: string;
@@ -19,27 +19,28 @@ export interface WalletConnectionProps {
 
 const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLabel = "Connect Wallet" }) => {
   const { address, isConnected } = useAccount()
-  const {  } = useCustomTheme()
+  const { } = useCustomTheme()
   const [, setCopied] = useState(false)
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  // useReadContract() // getUserInfo()
 
-  const account = useAccount()
-  console.log(account.address)
   useEffect(() => {
-    const registerUser = async () => {
-      // const accounts = await web3.eth.getAccounts();
-      const result = await entry.methods.registerUser().send({ from: account.address });
-      console.log(result);
-    }
-    registerUser();
-  }, [account]);
+    writeContract({
+      address: contractAddress as `0x${string}`,
+      abi: entryABI,
+      functionName: "registerUser",
+      account: address,
+      args: [],
+    });
+  }, [writeContract, address]);
 
   useEffect(() => {
     const getUserInfo = async () => {
-      const result = await entry.methods.getUserInfo(account.address).send({ from: account.address });
+      const result = await entry.methods.getUserInfo(address).call({ from: address });
       console.log(result);
     }
-    getUserInfo();
-  }, [account]);
+    // getUserInfo();
+  }, [address]);
 
   // Format address for display
   const formatAddress = (addr: string | undefined) => {
@@ -52,7 +53,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
     if (address) {
       navigator.clipboard.writeText(address)
       setCopied(true)
-      toast("Address copied",{
+      toast("Address copied", {
         description: "Address copied to clipboard",
         duration: 2000,
       })
@@ -63,7 +64,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
   // Open block explorer
   const openExplorer = () => {
     if (address) {
-      window.open(`https://basescan.org/address/${address}`, "_blank")
+      window.open(`https://sepolia.basescan.org/address/${address}`, "_blank")
     }
   }
 
@@ -96,7 +97,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
             <div className="flex items-center gap-2 text-white">
               <div className="h-6 w-6 overflow-hidden rounded-full">
                 {/* <Identity address={address} schemaId={address} className="items-center"> */}
-                  <Avatar address={address} className="h-full w-full bg-white dark:bg-blue-800" />
+                <Avatar address={address} className="h-full w-full bg-white dark:bg-blue-800" />
                 {/* </Identity> */}
               </div>
               <span className="hidden sm:inline">{formatAddress(address)}</span>
