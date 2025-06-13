@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dashboard } from '@/components/dashboard';
 import { useRouter } from 'next/navigation';
-
-
+import entry from '@/web3/web3';
+import web3 from '@/web3/web3';
 
 export default function DashboardPage() {
   const [isLiteMode, setIsLiteMode] = useState(false);
@@ -14,6 +14,9 @@ export default function DashboardPage() {
     setIsLiteMode(true);
     router.push('/lite');
   };
+
+  
+
 
   return (
     <div className="container mx-auto max-w-lg p-4 pb-20">
