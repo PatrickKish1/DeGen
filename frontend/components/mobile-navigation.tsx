@@ -93,16 +93,9 @@ export function ResponsiveNavigation({
     !item.requiresWallet || isConnected
   );
 
-  // Liquid glass styles
-  const liquidGlassStyles = liquidGlass ? {
-    background: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(20px) saturate(180%)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-  } : {};
-
+  // Liquid glass styles for dark mode
   const liquidGlassClasses = liquidGlass 
-    ? 'bg-white/10 backdrop-blur-[20px] backdrop-saturate-[180%] border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)]'
+    ? 'dark:bg-white/10 dark:backdrop-blur-[20px] dark:backdrop-saturate-[180%] dark:border-white/20 dark:shadow-[0_8px_32px_rgba(0,0,0,0.1)] bg-white/80 backdrop-blur-md border-border/40'
     : 'bg-background/80 backdrop-blur-md border-border/40';
 
   return (
@@ -129,9 +122,7 @@ export function ResponsiveNavigation({
                 "flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 pathname === item.href
                   ? "bg-primary text-primary-foreground"
-                  : liquidGlass 
-                    ? "text-white/80 hover:bg-white/20 hover:text-white"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  : "text-foreground dark:text-white/80 hover:bg-accent hover:text-accent-foreground dark:hover:bg-white/20 dark:hover:text-white"
               )}
             >
               {item.icon}
@@ -185,12 +176,8 @@ export function ResponsiveNavigation({
                 "flex flex-1 flex-col items-center justify-center rounded-full p-2 text-xs transition-all duration-200",
                 "min-w-[50px]", // Increased minimum width
                 pathname === item.href
-                  ? liquidGlass
-                    ? "bg-white/30 text-white shadow-lg scale-105"
-                    : "bg-primary text-primary-foreground scale-105"
-                  : liquidGlass
-                    ? "text-white/70 hover:bg-white/20 hover:text-white hover:scale-105"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:scale-105"
+                  ? "bg-primary text-primary-foreground scale-105 dark:bg-white/30 dark:text-white dark:shadow-lg"
+                  : "text-foreground dark:text-white/70 hover:bg-accent hover:text-accent-foreground dark:hover:bg-white/20 dark:hover:text-white hover:scale-105"
               )}
             >
               <div className="transition-transform duration-200">
@@ -216,7 +203,7 @@ export function ResponsiveNavigation({
         )}>
           <p className={cn(
             "text-sm text-center",
-            liquidGlass ? "text-white/80" : "text-muted-foreground"
+            "text-foreground dark:text-white/80"
           )}>
             Connect your wallet to access all features
           </p>
@@ -226,7 +213,7 @@ export function ResponsiveNavigation({
       {/* Add padding to body to account for fixed navigation */}
       <style jsx global>{`
         body {
-          padding-top: 70px; /* Desktop header height */
+          padding-top: 56px; /* Desktop header height */
           padding-bottom: ${isConnected ? '100px' : '140px'}; /* Mobile nav + status indicator */
         }
         
@@ -237,35 +224,15 @@ export function ResponsiveNavigation({
         }
 
         /* Enhanced liquid glass animation */
-        ${liquidGlass ? `
-          .backdrop-blur-[20px] {
-            backdrop-filter: blur(20px) saturate(180%) brightness(110%);
-          }
-          
-          /* Subtle shimmer effect for liquid glass */
-          @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-          }
-          
-          .bg-white\\/10::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-              90deg,
-              transparent 0%,
-              rgba(255, 255, 255, 0.1) 50%,
-              transparent 100%
-            );
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-            pointer-events: none;
-          }
-        ` : ''}
+        .dark .backdrop-blur-[20px] {
+          backdrop-filter: blur(20px) saturate(180%) brightness(110%);
+        }
+        
+        /* Subtle shimmer effect for liquid glass */
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
       `}</style>
     </>
   );
