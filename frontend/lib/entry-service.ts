@@ -55,13 +55,27 @@ export class EntryService {
   
   async exitAaveMarket(amountIn: string, to: string, minAmountOut: string) {
     if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contractAddress || this.contractAddress === '') throw new Error('Contract address is not set');
+    
+    console.log('Exiting Aave market with:', {
+      contractAddress: this.contractAddress,
+      amountIn,
+      to,
+      minAmountOut
+    });
     
     const amountInWei = ethers.utils.parseUnits(amountIn, 'ether');
     const minAmountOutWei = ethers.utils.parseUnits(minAmountOut, 'ether');
     
     try {
-      const tx = await this.contract.exitAaveMarket(amountInWei, to, minAmountOutWei);
-      return await tx.wait();
+      console.log('Calling exitAaveMarket on contract...');
+      const tx = await this.contract.exitAaveMarket(amountInWei, to, minAmountOutWei, {
+        gasLimit: 300000 // Adding gas limit to prevent underestimation
+      });
+      console.log('Withdrawal transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+      console.log('Withdrawal transaction confirmed:', receipt);
+      return receipt;
     } catch (error) {
       console.error('Error exiting Aave market:', error);
       throw error;
