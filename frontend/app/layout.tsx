@@ -27,13 +27,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={outfit.className}>
         <Providers>
-          <div className="relative min-h-screen">
-            {children}
+          <div className="relative min-h-screen overflow-x-clip pb-0">
             <ResponsiveNavigation
               logo={<span className="text-2xl font-bold">DeGen</span>}
               ThemeToggle={ThemeToggle}
               liquidGlass={true}
             />
+            {children}
           </div>
         </Providers>
       </body>
