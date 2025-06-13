@@ -100,47 +100,9 @@ export function ResponsiveNavigation({
 
   return (
     <>
-      {/* Desktop Navigation */}
-      <nav className={cn(
-        "hidden md:fixed md:top-0 md:left-0 md:right-0 md:z-50 md:flex md:items-center md:justify-between md:border-b md:px-6 md:py-4",
-        liquidGlassClasses
-      )}>
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center">
-            {logo || <div className="text-xl font-bold">Logo</div>}
-          </Link>
-        </div>
-
-        {/* Navigation Items */}
-        <div className="flex items-center space-x-8">
-          {visibleNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground dark:text-white/80 hover:bg-accent hover:text-accent-foreground dark:hover:bg-white/20 dark:hover:text-white"
-              )}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop Wallet + Theme Toggle */}
-        <div className="flex items-center space-x-4">
-          <WalletConnection />
-          <ThemeToggle />
-        </div>
-      </nav>
-
-      {/* Mobile Header (Logo + Wallet + Theme Toggle) */}
+      {/* Header Navigation for all screen sizes */}
       <div className={cn(
-        "fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 md:hidden",
+        "fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3",
         liquidGlassClasses
       )}>
         {/* Logo */}
@@ -150,20 +112,20 @@ export function ResponsiveNavigation({
           </Link>
         </div>
 
-        {/* Mobile Wallet + Theme Toggle */}
+        {/* Wallet + Theme Toggle */}
         <div className="flex items-center space-x-2">
           <div className="flex items-center">
             <ThemeToggle />
           </div>
           <WalletConnection 
-            className="text-xs px-2 py-1 min-w-0 flex-shrink-0" 
-            buttonLabel="Connect"
+            className="text-sm px-3 py-1" 
+            buttonLabel="Connect Wallet"
           />
         </div>
       </div>
 
-      {/* Mobile Navigation - Bottom */}
-      <div className="fixed bottom-4 left-0 right-0 z-50 mx-auto w-[95%] max-w-lg md:hidden">
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-4 left-0 right-0 z-50 mx-auto w-[95%] md:w-[80%] lg:w-[60%] max-w-3xl">
         <nav className={cn(
           "flex items-center justify-between rounded-full p-1 shadow-lg",
           liquidGlassClasses
@@ -184,7 +146,7 @@ export function ResponsiveNavigation({
                 {item.icon}
               </div>
               <span className={cn(
-                "mt-1 text-[9px] font-medium truncate w-full text-center transition-opacity duration-200",
+                "mt-1 text-[9px] md:text-[10px] font-medium truncate w-full text-center transition-opacity duration-200",
                 "leading-tight" // Better line height for small text
               )}>
                 {item.label}
@@ -194,10 +156,10 @@ export function ResponsiveNavigation({
         </nav>
       </div>
 
-      {/* Wallet Connection Status Indicator (Mobile) */}
+      {/* Wallet Connection Status Indicator */}
       {!isConnected && (
         <div className={cn(
-          "fixed bottom-20 left-0 right-0 z-40 mx-auto w-[95%] max-w-lg md:hidden",
+          "fixed bottom-20 left-0 right-0 z-40 mx-auto w-[95%] md:w-[80%] lg:w-[60%] max-w-3xl",
           "flex items-center justify-center p-3 rounded-lg",
           liquidGlassClasses
         )}>
@@ -213,14 +175,8 @@ export function ResponsiveNavigation({
       {/* Add padding to body to account for fixed navigation */}
       <style jsx global>{`
         body {
-          padding-top: 56px; /* Desktop header height */
-          padding-bottom: ${isConnected ? '100px' : '140px'}; /* Mobile nav + status indicator */
-        }
-        
-        @media (min-width: 768px) {
-          body {
-            padding-bottom: 0;
-          }
+          padding-top: 56px; /* Header height */
+          padding-bottom: ${isConnected ? '60px' : '100px'}; /* Reduced bottom padding */
         }
 
         /* Enhanced liquid glass animation */
