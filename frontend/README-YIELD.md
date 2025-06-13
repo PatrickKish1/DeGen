@@ -55,6 +55,21 @@ sequenceDiagram
     Entry->>Entry: Update userStuff[user].tokenBalance
     Entry-->>Frontend: Transaction confirmation
     Frontend-->>User: Success message with deposited amount
+    
+    Note over User,Frontend: Later when withdrawing...
+    
+    User->>Frontend: Clicks "Withdraw" on active position
+    Frontend->>Frontend: Display withdrawal dialog
+    User->>Frontend: Enter withdrawal amount
+    User->>Frontend: Click "Withdraw" button
+    Frontend->>Frontend: Calculate minAmountOut (95% of input)
+    Frontend->>Entry: exitAaveMarket(amountIn, user_address, minAmountOut)
+    Entry->>Aave: withdrawFromAave(amountIn, user_address, minAmountOut)
+    Aave-->>Entry: Return amountReceived
+    Entry->>Token: burn(amountReceived)
+    Entry->>Entry: Update userStuff[user].tokenBalance
+    Entry-->>Frontend: Transaction confirmation
+    Frontend-->>User: Success message with withdrawn amount
 ```
 
 ## Frontend Components
@@ -124,6 +139,30 @@ graph TD
 7. Gas fee optimization for smaller deposits
 8. Cross-chain yield farming using CCIP as mentioned in Entry.sol comments
 
+## Withdrawal Process
+
+Users can withdraw their assets from yield farming positions through the following steps:
+
+1. Click the "Withdraw" button on any active yield farming position
+2. Enter the amount to withdraw in the withdrawal dialog
+3. Click "Withdraw" to confirm the transaction
+
+The system will:
+1. Calculate a safe `minAmountOut` (95% of the withdrawal amount to account for slippage)
+2. Call the `exitAaveMarket` function on the Entry contract
+3. The contract will withdraw tokens from Aave, burn the equivalent reward tokens, and update the user's balance
+4. Display a confirmation message to the user
+
+```solidity
+function exitAaveMarket(uint256 amountIn, address to, uint minAmountOut) public {
+    require(userStuff[msg.sender].mAddr != address(0), ErrorLib.Entry__not_Registered());
+    uint256 amountReceived = farm.withdrawFromAave(amountIn, to, minAmountOut);
+    // burn Tokens of equilavalnce to user
+    token.burn(amountReceived);
+    userStuff[msg.sender].tokenBalance -= amountIn;
+}
+```
+
 ## Status
 
-As of June 2025, both Stablecoin Savings and Liquidity Mining features are fully implemented and functional in the frontend. Users can deposit assets and start earning yield from both strategies through the unified `enterAaveMarket` function in the Entry.sol contract.
+As of June 2025, both Stablecoin Savings and Liquidity Mining features are fully implemented and functional in the frontend. Users can deposit assets and start earning yield from both strategies through the unified `enterAaveMarket` function, and withdraw their assets using the `exitAaveMarket` function in the Entry.sol contract.
