@@ -31,8 +31,8 @@ contract RankNFT is ERC721, IRankNFT{
     uint256[] public levelAttained;
 
     constructor(address _entryPoint, address _gameContract) ERC721("CrossChainHeroes", "CCHERO") {
-        require(_entryPoint != address(0), "Invalid entry point address");
-        require(_gameContract != address(0), "Invalid game contract address");
+        // require(_entryPoint != address(0), "Invalid entry point address");
+        // require(_gameContract != address(0), "Invalid game contract address");
         entryPoint = IEntry(_entryPoint);
         gameContract = _gameContract;
         _nextTokenId = 1;

@@ -26,10 +26,10 @@ using SafeERC20 for IERC20;
 constructor(address _entry, address _uniswapFactory,
         address _swapRouter,
         address _manager){
-        require(_entry != address(0), "Entry address cannot be zero");
-        require(_uniswapFactory != address(0), "Uniswap factory address cannot be zero");
-        require(_swapRouter != address(0), "Swap router address cannot be zero");
-        require(_manager != address(0), "Manager address cannot be zero");
+        // require(_entry != address(0), "Entry address cannot be zero");
+        // require(_uniswapFactory != address(0), "Uniswap factory address cannot be zero");
+        // require(_swapRouter != address(0), "Swap router address cannot be zero");
+        // require(_manager != address(0), "Manager address cannot be zero");
          uniswapFactory = _uniswapFactory;
         swapRouter = ISwapRouter(_swapRouter);
         manager = IManager(_manager);

@@ -35,10 +35,10 @@ uint256 public groupCount;
 uint256 public communityCount;
 
 
-constructor(address _manager, address _farm, address _token, address _swapManager, address _gameContract, IRankNFT rankNFT) {
-    require(_manager != address(0), ErrorLib.Entry__Zero_Address());
-    require(_farm != address(0), ErrorLib.Entry__Zero_Address());
-    require(_token != address(0), ErrorLib.Entry__Zero_Address());
+constructor(address _manager, address _farm, address _token, address _swapManager,address _gameContract, IRankNFT rankNFT) {
+    // require(_manager != address(0), ErrorLib.Entry__Zero_Address());
+    // require(_farm != address(0), ErrorLib.Entry__Zero_Address());
+    // require(_token != address(0), ErrorLib.Entry__Zero_Address());
     manager = IManager(_manager);
     token = Token(_token);
     farm = IFarm(_farm);
@@ -47,6 +47,15 @@ constructor(address _manager, address _farm, address _token, address _swapManage
     _rankNFT =  IRankNFT(rankNFT);
 }
 
+function initialize(address _manager, address _farm, address _token , address _swapManager,  address _gameContract, IRankNFT rankNFT) public {
+    manager = IManager(_manager);
+    token = Token(_token);
+    farm = IFarm(_farm);
+    swapManager= ISwapManager(_swapManager);
+    gameContract = ICardGameWithNFT(_gameContract);
+    _rankNFT =  IRankNFT(rankNFT); 
+
+}
 ///////////////////////////// register user/////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
  function registerUser() public{

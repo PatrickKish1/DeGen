@@ -9,7 +9,7 @@ contract Token is ERC20 {
 IEntry public entryPoint;
 
     constructor(address _entryPoint) ERC20("blopToken", "bT") {
-        require(_entryPoint != address(0), "Entry point cannot be zero address");
+        // require(_entryPoint != address(0), "Entry point cannot be zero address");
         entryPoint = IEntry(_entryPoint);
         
      
