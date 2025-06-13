@@ -9,7 +9,7 @@ import { http, createConfig, WagmiProvider } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
 
 const BASE_API_KEY = process.env.COINBASE_TOKEN
-const PROJECT_ID = process.env.BASE_PROJECT_ID
+const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID || 'YOUR_PROJECT_ID'
 
 export const config = createConfig({
   chains: [baseSepolia,],
