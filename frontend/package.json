@@ -12,6 +12,7 @@
     "@babel/core": "^7.27.4",
     "@coinbase/agentkit": "^0.1.2",
     "@coinbase/onchainkit": "^0.38.14",
+    "@fontsource/outfit": "^5.2.6",
     "@hookform/resolvers": "^3.9.0",
     "@iexec/dataprotector": "^2.0.0-beta.15",
     "@next/swc-wasm-nodejs": "13.5.1",
