@@ -11,7 +11,9 @@ import {
   DollarSign, 
   Eye, 
   EyeOff,
-  Sparkles
+  Sparkles,
+  Bitcoin,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -71,11 +73,10 @@ export function BalanceCard({ className }: BalanceCardProps) {
             </div>
           </TabsContent>
           <TabsContent value="crypto" className="space-y-4">
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
+            <div className="mt-4 space-y-3">              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/30">
-                    BTC
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F7931A] text-white">
+                    <Bitcoin className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="font-medium">Bitcoin</div>
@@ -90,12 +91,10 @@ export function BalanceCard({ className }: BalanceCardProps) {
                   </div>
                   <div className="text-xs text-green-500">+1.2%</div>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
+              </div>              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30">
-                    ETH
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#627EEA] text-white">
+                    <Zap className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="font-medium">Ethereum</div>
@@ -110,12 +109,10 @@ export function BalanceCard({ className }: BalanceCardProps) {
                   </div>
                   <div className="text-xs text-red-500">-0.8%</div>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
+              </div>              <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30">
-                    USDC
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2775CA] text-white">
+                    <DollarSign className="h-4 w-4" />
                   </div>
                   <div>
                     <div className="font-medium">USD Coin</div>
