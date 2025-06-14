@@ -1,12 +1,13 @@
 'use client';
 
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'sonner';
+import { Toaster as SonnerToaster } from 'sonner';
 import { OnchainKitProvider } from "@coinbase/onchainkit"
 // import { base } from "wagmi/chains"
 import { useCustomTheme, ThemeProviderCustom } from "@/lib/theme-context"
 import { http, createConfig, WagmiProvider } from 'wagmi'
 import { baseSepolia } from 'wagmi/chains'
+import { Toaster } from '@/components/ui/toaster';
 
 const BASE_API_KEY = process.env.COINBASE_TOKEN
 const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID || 'YOUR_PROJECT_ID'
@@ -46,10 +47,10 @@ function OnchainKitProviderInner({ children }: { children: React.ReactNode }) {
         attribute="class"
         defaultTheme="dark"
         enableSystem
-        disableTransitionOnChange
-      >
+        disableTransitionOnChange      >
         {children}
-        <Toaster position="top-center" richColors />
+        <SonnerToaster position="top-center" richColors />
+        <Toaster />
       </ThemeProvider>
     </OnchainKitProvider>
   )
