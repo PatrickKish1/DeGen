@@ -4,11 +4,12 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from "@coinbase/onchainkit/wallet"
-import { Avatar, Address } from "@coinbase/onchainkit/identity"
+import { Address } from "@coinbase/onchainkit/identity"
 import { useAccount, useReadContract, useWriteContract } from "wagmi"
 import { useCustomTheme } from "@/lib/theme-context"
 import { Button } from "@/components/ui/button"
-import { Copy, ExternalLink } from "lucide-react"
+import { Copy, ExternalLink, Wallet as WalletIcon } from "lucide-react"
+import { FaCircleUser } from "react-icons/fa6"
 import { toast } from "sonner"
 import entry, { contractAddress, entryABI } from "@/web3/web3"
 
@@ -71,20 +72,7 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
   // Custom styled connect button
   const CustomConnectButton = () => (
     <Button variant="default" className={`${className} flex items-center gap-2`}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect width="20" height="14" x="2" y="5" rx="2" />
-        <line x1="2" x2="22" y1="10" y2="10" />
-      </svg>
+      <WalletIcon className="h-4 w-4" />
       {buttonLabel}
     </Button>
   )
@@ -95,10 +83,8 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
         <ConnectWallet className="flex items-center gap-2 bg-blue-800 dark:bg-blue-800 hover:bg-blue-900">
           {isConnected ? (
             <div className="flex items-center gap-2 text-white">
-              <div className="h-6 w-6 overflow-hidden rounded-full">
-                {/* <Identity address={address} schemaId={address} className="items-center"> */}
-                <Avatar address={address} className="h-full w-full bg-blue-800" />
-                {/* </Identity> */}
+              <div className="h-6 w-6 overflow-hidden rounded-full bg-blue-800 flex items-center justify-center">
+                <FaCircleUser className="h-4 w-4 text-white" />
               </div>
               <span className="hidden sm:inline">{formatAddress(address)}</span>
             </div>
@@ -111,8 +97,8 @@ const WalletConnection: React.FC<WalletConnectionProps> = ({ className, buttonLa
           <WalletDropdown>
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 overflow-hidden rounded-full">
-                  <Avatar address={address} className="h-full w-full bg-blue-800" />
+                <div className="h-10 w-10 overflow-hidden rounded-full bg-blue-800 flex items-center justify-center">
+                  <FaCircleUser className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <Address address={address} className="text-sm font-medium" />

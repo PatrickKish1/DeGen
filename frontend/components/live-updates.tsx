@@ -85,14 +85,13 @@ export const LiveUpdates: React.FC = () => {
           </ResponsiveContainer>
         </div>
         
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
+        <div className="space-y-3">          <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0">
                 <Bitcoin className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <p className="font-medium">Bitcoin</p>
+              <div className="min-w-0">
+                <p className="font-medium truncate">Bitcoin</p>
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary" className="bg-green-100 text-green-800 gap-1">
                     <TrendingUp className="h-3 w-3" />
@@ -102,19 +101,18 @@ export const LiveUpdates: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <p className="font-semibold">$29,800.45</p>
-              <p className="text-sm text-muted-foreground">Updated 30s ago</p>
+              <p className="text-xs text-muted-foreground">Updated 30s ago</p>
             </div>
           </div>
-          
-          <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
                 <Zap className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <p className="font-medium">Ethereum</p>
+              <div className="min-w-0">
+                <p className="font-medium truncate">Ethereum</p>
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary" className="bg-green-100 text-green-800 gap-1">
                     <TrendingUp className="h-3 w-3" />
@@ -124,19 +122,18 @@ export const LiveUpdates: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <p className="font-semibold">$1,950.32</p>
-              <p className="text-sm text-muted-foreground">Updated 45s ago</p>
+              <p className="text-xs text-muted-foreground">Updated 45s ago</p>
             </div>
           </div>
-          
-          <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center">
+            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <p className="font-medium">BNB</p>
+              <div className="min-w-0">
+                <p className="font-medium truncate">BNB</p>
                 <div className="flex items-center gap-1">
                   <Badge variant="secondary" className="bg-red-100 text-red-800 gap-1">
                     <TrendingDown className="h-3 w-3" />
@@ -146,9 +143,9 @@ export const LiveUpdates: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <p className="font-semibold">$245.78</p>
-              <p className="text-sm text-muted-foreground">Updated 1m ago</p>
+              <p className="text-xs text-muted-foreground">Updated 1m ago</p>
             </div>
           </div>
         </div>
