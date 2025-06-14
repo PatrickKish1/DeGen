@@ -7,6 +7,7 @@ import '@coinbase/onchainkit/styles.css';
 import './globals.css';
 import "@/lib/styles/onchainkit-styles.css"
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 const outfit = Outfit({ 
   subsets: ['latin'],
@@ -17,6 +18,10 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: 'DeGen',
   description: 'A secure decentralized finance mobile application with data protection',
+  icons: {
+    icon: '/degen1.png',
+    apple: '/degen1.png',
+  },
 };
 
 export default function RootLayout({
@@ -34,9 +39,18 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
-        <Providers>
-          <ResponsiveNavigation
-              logo={<span className="text-2xl font-bold">DeGen</span>}
+        <Providers>          <ResponsiveNavigation
+              logo={
+                <div className="flex items-center gap-2">                  <Image 
+                    src="/degen1.png" 
+                    alt="DeGen Logo" 
+                    width={30} 
+                    height={30} 
+                    className="h-10 w-10"
+                  />
+                  <span className="text-2xl font-bold">DeGen</span>
+                </div>
+              }
             ThemeToggle={ThemeToggle}
             liquidGlass={true}
           />
