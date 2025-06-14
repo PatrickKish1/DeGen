@@ -1,7 +1,5 @@
 # DeGen: Bridging Mobile Banking & DeFi
 
-![DeGen Platform](/Users/dreytech/Projects/DeGen/frontend/public/DEFIPlatform.png)
-
 ## Overview
 
 Mobile money and Web3 banking are widely used, but many users fall victim to scams (false transaction notifications, account draining, stolen account information). This becomes problematic as users can't easily distinguish fake transactions from real ones, making it difficult to protect themselves. At the same time, jumping into Web3 is complex, fragmented, and intimidating for the average user. There's no smooth path from mobile banking to DeFi yield.
