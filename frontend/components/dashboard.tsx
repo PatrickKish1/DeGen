@@ -1,5 +1,5 @@
 'use client';
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,19 +11,171 @@ import {
   ShieldAlert, 
   IdCard, 
   HeartPulse, 
-  Cpu 
+  Cpu, 
+  Check,
+  Lock,
+  Shield
 } from "lucide-react";
 import { BalanceCard } from "./balance-card";
 import { QuickActions } from "./quick-actions";
 import { LiveUpdates } from "./live-updates";
 import { TokenSwap } from "./token-swap";
-
+import { toast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
 
 interface DashboardProps {
   onGoToLiteMode: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
+// Define types for pendingApprovals and protectedData
+interface PendingApproval {
+  id: string;
+  title: string;
+  description: string;
+  isVisible: boolean;
+}
+
+interface ProtectedData {
+  id: string;
+  title: string;
+  description: string;
+  isProtected: boolean;
+  isProcessing?: boolean;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {  // State for pending approvals
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([
+    {
+      id: "uniswap",
+      title: "Uniswap Router",
+      description: "Requesting approval to spend your USDC",
+      isVisible: true
+    },
+    {
+      id: "aave",
+      title: "Aave Lending Pool",
+      description: "Requesting approval to spend your ETH",
+      isVisible: true
+    }
+  ]);
+
+  // State for protected data
+  const [protectedData, setProtectedData] = useState<ProtectedData[]>([
+    {
+      id: "passport",
+      title: "Passport Data",
+      description: "Protected with iExec",
+      isProtected: true
+    },
+    {
+      id: "health",
+      title: "Health Data",
+      description: "Not yet protected",
+      isProtected: false
+    }
+  ]);
+
+  // State for the configure dialog
+  const [configureDialogOpen, setConfigureDialogOpen] = useState(false);
+  const [configureProcessing, setConfigureProcessing] = useState(false);
+  const [configureComplete, setConfigureComplete] = useState(false);
+
+  // Function to handle reject action
+  const handleReject = (id: string) => {
+    setPendingApprovals(prevApprovals => 
+      prevApprovals.map(approval => 
+        approval.id === id ? { ...approval, isVisible: false } : approval
+      )
+    );
+    toast({
+      title: "Approval Rejected",
+      description: `You've rejected the approval request`,
+      variant: "destructive",
+    });
+  };
+
+  // Function to handle approve action
+  const handleApprove = (id: string) => {
+    setPendingApprovals(prevApprovals => 
+      prevApprovals.map(approval => 
+        approval.id === id ? { ...approval, isVisible: false } : approval
+      )
+    );
+    toast({
+      title: "Approval Successful",
+      description: `You've approved the request`,
+      variant: "default",
+    });
+  };
+
+  // Function to handle protect action
+  const handleProtect = (id: string) => {
+    setProtectedData(prevData => 
+      prevData.map(data => 
+        data.id === id ? { ...data, isProcessing: true } : data
+      )
+    );
+    
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      setProtectedData(prevData => 
+        prevData.map(data => 
+          data.id === id ? { 
+            ...data, 
+            isProtected: true, 
+            isProcessing: false, 
+            description: "Protected with iExec" 
+          } : data
+        )
+      );
+      toast({
+        title: "Data Protection Complete",
+        description: `Your ${id} data is now protected with iExec`,
+        variant: "default",
+      });
+    }, 1500); // 1.5 seconds delay to simulate process
+  };
+
+  // Function to handle configure action
+  const handleConfigure = () => {
+    setConfigureDialogOpen(true);
+  };
+
+  // Function to handle configure confirmation
+  const handleConfigureConfirm = () => {
+    setConfigureProcessing(true);
+    
+    // Simulate API call with a timeout
+    setTimeout(() => {
+      setConfigureProcessing(false);
+      setConfigureComplete(true);
+      toast({
+        title: "Configuration Complete",
+        description: "iExec Confidential Computing has been configured successfully",
+        variant: "default",
+      });
+    }, 2000); // 2 seconds delay to simulate process
+  };
+
+  // Function to reset and close dialog
+  const handleCloseDialog = () => {
+    setConfigureDialogOpen(false);
+    // Reset after animation
+    setTimeout(() => {
+      setConfigureComplete(false);
+    }, 300);
+  };
+
+  // Calculate visible approvals count
+  const visibleApprovalsCount = pendingApprovals.filter(approval => approval.isVisible).length;
+
   return (
     <div className="space-y-6 mt-16">
       <div className="flex justify-between items-center">
@@ -121,53 +273,57 @@ export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
               <Button size="sm" variant="ghost">
                 <Bell className="h-4 w-4" />
               </Button>
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                2
-              </Badge>
+              {visibleApprovalsCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {visibleApprovalsCount}
+                </Badge>
+              )}
             </div>
           </div>
           
           <div className="space-y-3">
-            <div className="p-3 border border-red-200 bg-red-50 dark:bg-red-900/20 rounded-md">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="text-red-500 h-5 w-5" />
-                  <p className="font-medium">Uniswap Router</p>
+            {pendingApprovals.map(approval => (
+              approval.isVisible && (
+                <div key={approval.id} className="p-3 border border-red-200 bg-red-50 dark:bg-red-900/20 rounded-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="text-red-500 h-5 w-5" />
+                      <p className="font-medium">{approval.title}</p>
+                    </div>
+                    <Badge variant="destructive">Action Required</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {approval.description}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-red-200 text-red-600"
+                      onClick={() => handleReject(approval.id)}
+                    >
+                      Reject
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleApprove(approval.id)}
+                    >
+                      Approve
+                    </Button>
+                  </div>
                 </div>
-                <Badge variant="destructive">Action Required</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Requesting approval to spend your USDC
-              </p>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="border-red-200 text-red-600">
-                  Reject
-                </Button>
-                <Button size="sm">Approve</Button>
-              </div>
-            </div>
+              )
+            ))}
             
-            <div className="p-3 border border-red-200 bg-red-50 dark:bg-red-900/20 rounded-md">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="text-red-500 h-5 w-5" />
-                  <p className="font-medium">Aave Lending Pool</p>
-                </div>
-                <Badge variant="destructive">Action Required</Badge>
+            {visibleApprovalsCount === 0 && (
+              <div className="py-8 flex flex-col items-center justify-center text-muted-foreground">
+                <Check className="h-12 w-12 text-green-500 mb-2" />
+                <p>No pending approvals</p>
               </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Requesting approval to spend your ETH
-              </p>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="border-red-200 text-red-600">
-                  Reject
-                </Button>
-                <Button size="sm">Approve</Button>
-              </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -185,37 +341,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
           </div>
           
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-              <div className="flex items-center gap-3">
-                <div className="bg-secondary/10 p-2 rounded-full">
-                  <IdCard className="text-secondary h-5 w-5" />
+            {protectedData.map(data => (
+              <div key={data.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                <div className="flex items-center gap-3">
+                  <div className="bg-secondary/10 p-2 rounded-full">
+                    {data.id === "passport" ? (
+                      <IdCard className="text-secondary h-5 w-5" />
+                    ) : (
+                      <HeartPulse className="text-secondary h-5 w-5" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{data.title}</p>
+                    <p className="text-muted-foreground text-sm">{data.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">Passport Data</p>
-                  <p className="text-muted-foreground text-sm">Protected with iExec</p>
+                <div className="text-right">
+                  {data.isProtected ? (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Protected
+                    </Badge>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      disabled={data.isProcessing}
+                      onClick={() => handleProtect(data.id)}
+                    >
+                      {data.isProcessing ? "Processing..." : "Protect"}
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="text-right">
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Protected
-                </Badge>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-2 bg-muted rounded-md">
-              <div className="flex items-center gap-3">
-                <div className="bg-secondary/10 p-2 rounded-full">
-                  <HeartPulse className="text-secondary h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-medium">Health Data</p>
-                  <p className="text-muted-foreground text-sm">Not yet protected</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <Button size="sm" variant="secondary">Protect</Button>
-              </div>
-            </div>
+            ))}
             
             <div className="p-3 bg-secondary/10 rounded-md">
               <div className="flex items-center gap-2">
@@ -224,7 +382,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
                   <p className="font-medium text-sm">iExec Confidential Computing</p>
                   <p className="text-xs text-muted-foreground">Process data without exposing it</p>
                 </div>
-                <Button size="sm" variant="outline" className="border-secondary text-secondary">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="border-secondary text-secondary"
+                  onClick={handleConfigure}
+                >
                   Configure
                 </Button>
               </div>
@@ -232,6 +395,77 @@ export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* iExec Configuration Dialog */}
+      <Dialog open={configureDialogOpen} onOpenChange={handleCloseDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configure iExec Confidential Computing</DialogTitle>              <DialogDescription>
+              Set up how your sensitive data is processed with iExec&apos;s secure computation framework.
+            </DialogDescription>
+          </DialogHeader>
+          {configureComplete ? (
+            <div className="py-6 flex flex-col items-center justify-center">
+              <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full mb-4">
+                <Shield className="h-12 w-12 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Configuration Complete</h3>
+              <p className="text-center text-muted-foreground mb-4">
+                Your iExec Confidential Computing environment has been set up successfully.
+              </p>
+              <Button onClick={handleCloseDialog}>Close</Button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4 py-4">
+                <div className="flex items-start space-x-4">
+                  <div className="bg-secondary/10 p-2 rounded-full">
+                    <Lock className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">Encryption Level</h4>
+                    <p className="text-xs text-muted-foreground">Military-grade end-to-end encryption</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="bg-secondary/10 p-2 rounded-full">
+                    <Shield className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">Access Control</h4>
+                    <p className="text-xs text-muted-foreground">Only you control who can access your data</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="bg-secondary/10 p-2 rounded-full">
+                    <Cpu className="h-5 w-5 text-secondary" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">Compute Environment</h4>
+                    <p className="text-xs text-muted-foreground">Trusted execution environment for maximum security</p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="sm:justify-start">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCloseDialog}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="button"
+                  onClick={handleConfigureConfirm}
+                  disabled={configureProcessing}
+                >
+                  {configureProcessing ? "Configuring..." : "Configure"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
