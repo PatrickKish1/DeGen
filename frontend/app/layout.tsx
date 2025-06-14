@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: 'DeGen',
   description: 'A secure decentralized finance mobile application with data protection',
   icons: {
-    icon: '/degen1.png',
-    apple: '/degen1.png',
+    icon: '/degen.png',
+    apple: '/degen.png',
   },
 };
 
