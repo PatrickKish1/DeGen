@@ -3,6 +3,12 @@
 ## Overview
 
 Mobile money and Web3 banking are widely used, but many users fall victim to scams (false transaction notifications, account draining, stolen account information). This becomes problematic as users can't easily distinguish fake transactions from real ones, making it difficult to protect themselves. At the same time, jumping into Web3 is complex, fragmented, and intimidating for the average user. There's no smooth path from mobile banking to DeFi yield.
+*YOUTUBE*
+```
+https://youtu.be/sEaAbslh69U
+```
+
+Mobile money and Web3 banking are widely used, but many users fall victim to scams (false transaction notifications, account draining, stolen account information). This becomes problematic as users can't easily distinguish fake transactions from real ones, making it difficult to protect themselves. At the same time, jumping into Web3 is complex, fragmented, and intimidating for the average user. There’s no smooth path from mobile banking to DeFi yield.
 
 **DeGen** is a platform that bridges traditional mobile banking with decentralized finance (DeFi). It uses real-time transaction analysis, fraud detection, and Web3 integrations to help users understand, protect, and grow their money.
 
