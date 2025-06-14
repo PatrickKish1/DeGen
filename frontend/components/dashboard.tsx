@@ -16,6 +16,7 @@ import {
 import { BalanceCard } from "./balance-card";
 import { QuickActions } from "./quick-actions";
 import { LiveUpdates } from "./live-updates";
+import { TokenSwap } from "./token-swap";
 
 
 interface DashboardProps {
@@ -37,12 +38,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onGoToLiteMode }) => {
           Lite Mode
         </Button>
       </div>
-      
-      <BalanceCard />
+        <BalanceCard />
       
       <QuickActions />
-      
-      <LiveUpdates />
+        <div className="space-y-6">
+        <LiveUpdates />
+        <TokenSwap />
+      </div>
       
       <Card className="gradient-card">
         <CardContent className="p-6">
