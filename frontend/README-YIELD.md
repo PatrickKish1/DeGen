@@ -15,6 +15,7 @@ The frontend integrates with the `Entry.sol` contract, specifically using the `e
 
 - `enterAaveMarket(uint256 amountIn, uint minAmountOut)`: Deposits tokens into Aave markets and for Liquidity Mining
 - `exitAaveMarket(uint256 amountIn, address to, uint minAmountOut)`: Withdraws tokens from Aave
+- `swapTokens(address tokenIn, address tokenOut, uint256 amountIn, uint256 minAmountOut, uint24 tier, uint40 deadline, address receiverAddr)`: Swaps tokens using Uniswap V3 pools
 
 ### Implementation Flow
 
@@ -25,6 +26,7 @@ sequenceDiagram
     participant Wallet as User Wallet
     participant Entry as Entry.sol Contract
     participant Aave as Aave Protocol
+    participant Uniswap as Uniswap V3
     participant Token as Token Contract
 
     User->>Frontend: Clicks "Start Earning" on Yield Card
@@ -47,6 +49,18 @@ sequenceDiagram
         Frontend->>Entry: enterAaveMarket(amountIn, minAmountOut)
     else Liquidity Mining
         Frontend->>Entry: enterAaveMarket(amountIn, minAmountOut)
+    end
+    
+    alt Token Swap Flow
+        User->>Frontend: Select tokens and enter swap amount
+        User->>Frontend: Click "Swap Tokens" button
+        Frontend->>Frontend: Calculate minAmountOut based on slippage
+        Frontend->>Entry: swapTokens(tokenIn, tokenOut, amountIn, minAmountOut, tier, deadline, receiver)
+        Entry->>Entry: Verify user is registered
+        Entry->>Uniswap: Execute swap via swapManager.swapExactInputSingle
+        Uniswap-->>Entry: Return swap result
+        Entry-->>Frontend: Return transaction confirmation
+        Frontend-->>User: Display success message
     end
 
     Entry->>Aave: depositToAave(amountIn, minAmountOut)
@@ -76,6 +90,7 @@ sequenceDiagram
 
 - `YieldCard`: Displays available yield farming options and handles deposits/withdrawals
 - `EntryService`: Service class that interfaces with the Entry contract
+- `TokenSwap`: Component that allows users to swap between different ERC20 tokens
 
 ## Setup
 
@@ -127,6 +142,31 @@ graph TD
    - Each option is configured with different display attributes (risk level, APY, lock period)
    - The `contractFunction` parameter identifies which yield option is selected
    - Both options use the EntryService's `enterAaveMarket` method to interact with the smart contract
+
+## Token Swap Component
+
+The `TokenSwap` component allows users to seamlessly swap between different ERC20 tokens using Uniswap V3 liquidity pools. This component is integrated into the dashboard and provides the following features:
+
+- Select from common tokens (DAI, USDC, WETH, WBTC) for input and output
+- Set custom slippage tolerance or use automatic calculation
+- Choose fee tier based on pool liquidity preferences (0.05%, 0.3%, 1%)
+- Specify transaction deadline to protect against pending transactions
+- Automatic calculation of minimum output amount based on slippage
+
+The frontend connects to the `swapTokens` function in the Entry contract, which then utilizes the `swapManager` to perform the swap via Uniswap V3's `swapExactInputSingle` function.
+
+### Technical Implementation
+
+1. The frontend component collects all necessary parameters from the user
+2. Before executing the swap, it verifies the user is registered
+3. The swap is executed through the contract's `swapTokens` function
+4. The `SwapManager` contract handles the interaction with Uniswap V3 through the `ISwapRouter` interface
+5. Successful swaps are recorded and the user interface is updated accordingly
+
+### Key Frontend Files
+
+- `components/token-swap.tsx`: Main component for the swap interface
+- `lib/entry-service.ts`: Service that handles communication with the Entry contract
 
 ## Future Improvements
 
