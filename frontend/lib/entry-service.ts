@@ -119,6 +119,50 @@ export class EntryService {
     }
   }
   
+  async swapTokens(tokenIn: string, tokenOut: string, amountIn: string, minAmountOut: string, fee: number, deadline: number, receiver: string) {
+    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contractAddress || this.contractAddress === '') throw new Error('Contract address is not set');
+    
+    console.log('Swapping tokens with:', {
+      contractAddress: this.contractAddress,
+      tokenIn,
+      tokenOut,
+      amountIn,
+      minAmountOut,
+      fee,
+      deadline,
+      receiver
+    });
+    
+    const amountInWei = ethers.utils.parseUnits(amountIn, 'ether');
+    const minAmountOutWei = ethers.utils.parseUnits(minAmountOut, 'ether');
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const deadlineTimestamp = currentTimestamp + (deadline * 60); // Convert minutes to seconds and add to current timestamp
+    
+    try {
+      console.log('Calling swapTokens on contract...');
+      const tx = await this.contract.swapTokens(
+        tokenIn,
+        tokenOut,
+        amountInWei,
+        minAmountOutWei,
+        fee,
+        deadlineTimestamp,
+        receiver,
+        {
+          gasLimit: 500000 // Adding gas limit to prevent underestimation
+        }
+      );
+      console.log('Swap transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+      console.log('Swap transaction confirmed:', receipt);
+      return receipt;
+    } catch (error) {
+      console.error('Error swapping tokens:', error);
+      throw error;
+    }
+  }
+  
   async getBalance(userAddress: string, tokenAddress: string) {
     if (!this.contract) throw new Error('Contract not initialized');
     
