@@ -16,6 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface VerifiedEntity {
   id: string;
@@ -83,6 +84,12 @@ export function VerifySection({ className }: VerifySectionProps) {
   const [currentQrCode, setCurrentQrCode] = useState<string | null>(null);
   const [scanComplete, setScanComplete] = useState(false);
   const [scanResult, setScanResult] = useState<VerifiedEntity | null>(null);
+  
+  // Search functionality
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<VerifiedEntity[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Function to handle verify now action
   const handleVerify = (id: string) => {
@@ -147,6 +154,35 @@ export function VerifySection({ className }: VerifySectionProps) {
     }, 1000);
   };
 
+  // Function to handle search
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    
+    // Simulate search API call with timeout
+    setTimeout(() => {
+      const query = searchQuery.toLowerCase();
+      const results = entities.filter(entity => 
+        entity.name.toLowerCase().includes(query) || 
+        entity.identifier.toLowerCase().includes(query) ||
+        entity.type.toLowerCase().includes(query)
+      );
+      
+      setSearchResults(results);
+      setIsSearching(false);
+      
+      toast({
+        title: `${results.length} results found`,
+        description: results.length > 0 ? `Found entities matching "${searchQuery}"` : `No entities found for "${searchQuery}"`,
+        variant: results.length > 0 ? "default" : "destructive",
+      });
+    }, 800);
+  };
+
   return (
     <Card className={cn("border-0", className)}>
       <CardHeader>
@@ -160,8 +196,15 @@ export function VerifySection({ className }: VerifySectionProps) {
           <Button className="flex-1 gap-2" onClick={handleScanQR}>
             <QrCode className="h-4 w-4" />
             <span>Scan QR</span>
-          </Button>
-          <Button variant="outline" className="flex-1 gap-2">
+          </Button>          <Button 
+            variant="outline" 
+            className="flex-1 gap-2"
+            onClick={() => {
+              setSearchOpen(true);
+              setSearchQuery('');
+              setSearchResults([]);
+            }}
+          >
             <Search className="h-4 w-4" />
             <span>Search</span>
           </Button>
@@ -215,6 +258,99 @@ export function VerifySection({ className }: VerifySectionProps) {
           </div>
         </div>
       
+        {/* Search Dialog */}
+        <Dialog open={searchOpen} onOpenChange={(open) => !open && setSearchOpen(false)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Search Verified Entities</DialogTitle>
+              <DialogDescription>
+                Search by name, ID, or entity type
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4 flex gap-2">
+              <Input 
+                placeholder="Enter search term..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button onClick={handleSearch} disabled={isSearching}>
+                {isSearching ? 'Searching...' : 'Search'}
+              </Button>
+            </div>
+            
+            <div className="mt-6">
+              {searchResults.length > 0 ? (
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  <h4 className="text-sm font-medium mb-2">Results ({searchResults.length})</h4>
+                  
+                  {searchResults.map((entity) => (
+                    <div
+                      key={entity.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-full",
+                          entity.isVerified ? "bg-green-100 text-green-600 dark:bg-green-900/30" : "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30"
+                        )}>
+                          {entity.isVerified ? <ShieldCheck className="h-5 w-5" /> : <Info className="h-5 w-5" />}
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{entity.name}</span>
+                            <Badge variant="outline" className="text-[10px]">{entity.type.toUpperCase()}</Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">ID: {entity.identifier}</div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        {entity.isVerified ? (
+                          <Badge className="bg-green-500 hover:bg-green-600">Verified</Badge>
+                        ) : entity.isVerifying ? (
+                          <Button size="sm" className="h-8 text-xs" disabled>
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            Verifying...
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              handleVerify(entity.id);
+                              setSearchOpen(false);
+                            }}
+                          >
+                            Verify Now
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : searchQuery && !isSearching ? (
+                <div className="py-8 flex flex-col items-center justify-center text-muted-foreground">
+                  <Search className="h-10 w-10 mb-2" />
+                  <p>No entities found matching &quot;{searchQuery}&quot;</p>
+                </div>
+              ) : null}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchOpen(false)}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
         {/* QR Code Scan Dialog */}
         <Dialog open={scanQrOpen} onOpenChange={(open) => !open && setScanQrOpen(false)}>
           <DialogContent className="sm:max-w-md">
