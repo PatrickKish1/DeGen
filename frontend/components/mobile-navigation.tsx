@@ -102,7 +102,7 @@ export function ResponsiveNavigation({
     <>
       {/* Header Navigation for all screen sizes */}
       <div className={cn(
-        "fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3",
+        "fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-4",
         liquidGlassClasses
       )}>
         {/* Logo */}
